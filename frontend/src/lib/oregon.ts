@@ -348,6 +348,11 @@ export async function postPrepare(symbol: string, quoteBudget?: string) {
   };
 }
 
+export function oauthStartUrl(origin: string) {
+  const ret = encodeURIComponent(origin.replace(/\/$/, ""));
+  return `${API_BASE}/v1/oauth/start?return=${ret}`;
+}
+
 export function intentText(c: CapacityConstraints): string {
   const base = c.symbol.replace(/USDT$/, "");
   const days = c.exitHorizonDays === 1 ? "one day" : `${c.exitHorizonDays} days`;

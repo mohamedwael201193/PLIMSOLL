@@ -31,6 +31,10 @@ services:
         value: https://data-api.binance.vision
       - key: BINANCE_MCP_URL
         value: https://agent.binance.com/mcp/agentic
+      - key: OAUTH_PUBLIC_BASE
+        value: https://plimsoll-oregon.onrender.com
+      - key: OAUTH_FRONTEND_ORIGIN
+        value: https://plimsoll-jade.vercel.app
       - key: BINANCE_WS_BASE
         value: wss://stream.binance.com:9443
       - key: DATABASE_URL

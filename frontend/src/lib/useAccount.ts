@@ -6,6 +6,7 @@ import { getAccount, getHealth } from "./oregon";
 export type ConnectPhase =
   | "DISCONNECTED"
   | "CONNECTING"
+  | "AUTHORIZING"
   | "CONNECTED"
   | "READING ACCOUNT"
   | "ERROR";

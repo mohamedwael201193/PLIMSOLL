@@ -92,7 +92,9 @@ Health: `GET /health`
 | `BINANCE_WS_BASE` | Public stream origin (reserved) |
 | `WRITES_ENABLED` | Must stay `false` until an operator enables writes |
 | `KILL_SWITCH` | Halt writes |
-| `BINANCE_MCP_ACCESS_TOKEN` | Optional MCP bearer for this backend client (never commit) |
+| `BINANCE_MCP_ACCESS_TOKEN` | Optional MCP bearer fallback (never commit) |
+| `OAUTH_PUBLIC_BASE` | Public Oregon origin for CIMD client_id |
+| `OAUTH_FRONTEND_ORIGIN` | Allowed frontend origin after OAuth |
 | `PYTHON_VERSION` | Render native Python (e.g. 3.12.8) |
 
 ## Tests
@@ -154,7 +156,8 @@ Live UI: https://plimsoll-jade.vercel.app (`/`, `#/app`, `#/docs`, `#/docs/mcp`)
 1. Open the landing. The ARKUSDT strip is a **LIVE** Oregon ticker feed, not a mock.
 2. On `#/app`, ask for a dollar size (try `$1000` then `$10000` of ARK with a one-day exit). Read estimated exit capacity, cost vs time, and binding. Numbers come from `POST /v1/intent`.
 3. If the agent proposes a legal size, issue a snapshot-bound approval. That token is **not** a financial write.
-4. A live order happens only after the operator types **`CONFIRM`** plus `WRITES_ENABLED=true`. Oregon `POST /v1/execution/prepare` checks live minNotional against the Agentic USDT balance first.
-5. `POST /v1/resolve` re-inverts a held position. Over-capacity → `TRIM_HELD`, never an automatic sell.
+4. Click **CONNECT BINANCE**. Oregon starts official Agent OS OAuth (PKCE). The token stays on the server. Then read the Agentic account. Zero balances display as zero.
+5. A live order happens only after the operator types **`CONFIRM`** plus `WRITES_ENABLED=true`. Oregon `POST /v1/execution/prepare` checks live minNotional against the Agentic USDT balance first.
+6. `POST /v1/resolve` re-inverts a held position. Over-capacity → `TRIM_HELD`, never an automatic sell.
 
 The desk does not invent fills. Empty execution history means none stored.

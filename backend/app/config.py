@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     kill_switch: bool = False
     auto_create_schema: bool = False
     binance_mcp_access_token: str = Field(default="", repr=False)
+    oauth_public_base: str = "https://plimsoll-oregon.onrender.com"
+    oauth_frontend_origin: str = "https://plimsoll-jade.vercel.app"
     http_timeout_s: float = 8.0
     stale_timeout_ms: int = 5000
     resolve_interval_s: int = 15

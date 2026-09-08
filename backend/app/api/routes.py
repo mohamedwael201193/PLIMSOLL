@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import APIRouter, Header, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from app.agent.approval import issue_approval, validate_approval
@@ -19,6 +19,13 @@ from app.core.sizing import legalize_market
 from app.logutil import get_logger
 from app.rails.market import MarketError, fetch_snapshot, fetch_tickers
 from app.rails.mcp import McpError, McpSession
+from app.rails.oauth import (
+    client_metadata,
+    current_mcp_token,
+    handle_callback,
+    start_authorize,
+    token_source,
+)
 from app.state.db import ping
 from app.state.models import FillRow, SnapshotRow
 from app.state.snapshots import persist_snapshot
@@ -140,6 +147,8 @@ def health() -> dict[str, Any]:
         "app": s.app_name,
         "writes_enabled": s.writes_enabled,
         "kill_switch": s.kill_switch,
+        "mcp_bound": bool(current_mcp_token()),
+        "mcp_token_source": token_source(),
         "time": utcnow().isoformat(),
     }
 
@@ -369,12 +378,13 @@ def execute(
     )
     if err:
         raise HTTPException(status_code=403, detail={"error_class": err})
-    if not settings.binance_mcp_access_token:
+    token = current_mcp_token()
+    if not token:
         raise HTTPException(
             status_code=503,
             detail={"error_class": "MCP_TOKEN_MISSING", "classification": "UNKNOWN"},
         )
-    session = McpSession(settings.binance_mcp_url, settings.binance_mcp_access_token)
+    session = McpSession(settings.binance_mcp_url, token)
     with httpx.Client(timeout=settings.http_timeout_s) as client:
         try:
             session.discover(client)
@@ -581,16 +591,17 @@ def _nonzero_balances(payload: Any) -> list[dict[str, str]]:
 @router.get("/v1/account")
 def account() -> dict[str, Any]:
     settings = get_settings()
-    if not settings.binance_mcp_access_token:
+    token = current_mcp_token()
+    if not token:
         return {
             "connected": False,
             "classification": "UNKNOWN",
             "account_kind": "NOT_CONNECTED",
-            "reason": "No Agent OS MCP token on the Oregon server. Authorize official Agent OS in an MCP client mapped to the Agentic Sub, then the operator sets BINANCE_MCP_ACCESS_TOKEN server-side. The browser never receives that token.",
+            "reason": "No Agent OS session on Oregon. Use CONNECT BINANCE to run official Agent OS OAuth. The browser never receives the token.",
             "writes_enabled": settings.writes_enabled,
             "kill_switch": settings.kill_switch,
         }
-    session = McpSession(settings.binance_mcp_url, settings.binance_mcp_access_token)
+    session = McpSession(settings.binance_mcp_url, token)
     with httpx.Client(timeout=settings.http_timeout_s) as client:
         try:
             session.discover(client)
@@ -652,13 +663,14 @@ def account() -> dict[str, Any]:
 @router.get("/v1/mcp/capabilities")
 def mcp_caps() -> dict[str, Any]:
     settings = get_settings()
-    if not settings.binance_mcp_access_token:
+    token = current_mcp_token()
+    if not token:
         return {
             "classification": "UNKNOWN",
             "bound": False,
-            "reason": "BINANCE_MCP_ACCESS_TOKEN unset",
+            "reason": "No Agent OS session. CONNECT BINANCE starts official OAuth; tools are discovered after bind.",
         }
-    session = McpSession(settings.binance_mcp_url, settings.binance_mcp_access_token)
+    session = McpSession(settings.binance_mcp_url, token)
     with httpx.Client(timeout=settings.http_timeout_s) as client:
         session.discover(client)
     return {
@@ -669,3 +681,33 @@ def mcp_caps() -> dict[str, Any]:
         "writes_enabled": settings.writes_enabled,
         "kill_switch": settings.kill_switch,
     }
+
+
+@router.get("/.well-known/oauth-client")
+def oauth_client(request: Request) -> dict[str, Any]:
+    return client_metadata(request)
+
+
+@router.get("/v1/oauth/status")
+def oauth_status(request: Request) -> dict[str, Any]:
+    return {
+        "bound": bool(current_mcp_token()),
+        "source": token_source(),
+        "client_id": client_metadata(request)["client_id"],
+        "authorization_server": "https://agent.binance.com",
+        "mcp": "https://agent.binance.com/mcp/agentic",
+        "token_endpoint_auth_method": "none",
+        "pkce": "S256",
+        "note": "CONNECT BINANCE starts official Agent OS OAuth. Tokens never leave Oregon.",
+    }
+
+
+@router.get("/v1/oauth/start")
+def oauth_start(request: Request, return_origin: str | None = Query(default=None, alias="return")):
+    origin = return_origin or request.headers.get("origin") or ""
+    return start_authorize(request, origin)
+
+
+@router.get("/v1/oauth/callback")
+def oauth_callback(request: Request):
+    return handle_callback(request)

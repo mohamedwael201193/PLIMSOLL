@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_CONSTRAINTS } from "./capacity";
-import { intentText, mapCapacityBody } from "./oregon";
+import { intentText, mapCapacityBody, oauthStartUrl } from "./oregon";
 
 describe("mapCapacityBody", () => {
   it("maps Oregon LIVE intent payload without inventing capacity", () => {
@@ -72,5 +72,14 @@ describe("intentText", () => {
     expect(intentText({ ...DEFAULT_CONSTRAINTS, targetNotional: 1000 })).toBe(
       "I want $1000 of ARK and need to exit within one day."
     );
+  });
+});
+
+describe("oauthStartUrl", () => {
+  it("points CONNECT BINANCE at Oregon OAuth without embedding a token", () => {
+    const url = oauthStartUrl("https://plimsoll-jade.vercel.app");
+    expect(url).toContain("/v1/oauth/start?return=");
+    expect(url).toContain("plimsoll-jade.vercel.app");
+    expect(url.toLowerCase()).not.toContain("token");
   });
 });

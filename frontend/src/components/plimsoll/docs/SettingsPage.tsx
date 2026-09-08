@@ -137,6 +137,34 @@ export default function SettingsPage({ glitch }: Props) {
   const disarmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const account = useAccount();
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const q = new URLSearchParams(window.location.search);
+    const oauth = q.get("oauth");
+    if (!oauth) return;
+    const reason = q.get("reason") || "";
+    if (oauth === "ok") {
+      toast({ title: "OAUTH RETURNED", description: "Oregon stored the session server-side. Reading the Agentic account." });
+      void account.refresh();
+    } else if (oauth === "denied") {
+      toast({
+        title: "AUTHORIZATION NOT COMPLETED",
+        description: reason || "Binance authorization was not completed.",
+      });
+    } else {
+      toast({
+        title: "AGENTIC ACCOUNT UNREACHABLE",
+        description: reason || "Agentic account could not be reached.",
+      });
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete("oauth");
+    url.searchParams.delete("reason");
+    window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+    // account.refresh is stable enough for this one-shot query consume
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // disarm timer cleanup
   useEffect(
     () => () => {

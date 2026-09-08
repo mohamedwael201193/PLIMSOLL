@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Lock } from "lucide-react";
 import { Corners } from "./desk/shared";
 import { focusGold } from "./landing/shared";
+import { oauthStartUrl } from "@/lib/oregon";
 import type { AccountState } from "@/lib/useAccount";
 
 const MCP_DOCS = "https://developers.binance.com/en/docs/agent-native/mcp-server";
@@ -15,12 +17,19 @@ export function ConnectPanel({
   account: AccountState & { error: string | null; refresh: () => Promise<void> };
   onRefresh?: () => void;
 }) {
+  const [authorizing, setAuthorizing] = useState(false);
   const kindLabel =
     account.accountKind === "SPOT_UNLABELLED"
       ? "AGENTIC ACCOUNT (SPOT — UNLABELLED BY MCP)"
       : account.accountKind === "NOT_CONNECTED"
         ? "NOT CONNECTED"
         : account.accountKind.replace(/_/g, " ");
+  const phase = authorizing ? "AUTHORIZING" : account.phase;
+
+  const startOAuth = () => {
+    setAuthorizing(true);
+    window.location.assign(oauthStartUrl(window.location.origin));
+  };
 
   return (
     <section
@@ -30,7 +39,7 @@ export function ConnectPanel({
       <Corners />
       <div className="flex flex-wrap items-center justify-between gap-2 font-code text-[10px] tracking-[0.3em]">
         <span className="text-plimsoll">CONNECT BINANCE</span>
-        <span className={account.connected ? "text-emerald-400" : "text-plimsoll/50"}>{account.phase}</span>
+        <span className={account.connected ? "text-emerald-400" : "text-plimsoll/50"}>{phase}</span>
       </div>
 
       <div className="mt-4 font-display text-xl sm:text-2xl text-white">
@@ -86,14 +95,27 @@ export function ConnectPanel({
       <div className="mt-5 flex flex-wrap gap-3">
         <button
           type="button"
-          onClick={() => {
-            void account.refresh();
-            onRefresh?.();
-          }}
+          onClick={
+            account.connected
+              ? () => {
+                  void account.refresh();
+                  onRefresh?.();
+                }
+              : startOAuth
+          }
           className={`tech-box-dark font-code text-[10px] sm:text-[11px] tracking-[0.2em] ${focusGold}`}
         >
-          {account.connected ? "RECONNECT" : "CONNECT BINANCE"}
+          {authorizing ? "AUTHORIZING…" : account.connected ? "READ ACCOUNT" : "CONNECT BINANCE"}
         </button>
+        {account.connected && (
+          <button
+            type="button"
+            onClick={startOAuth}
+            className={`tech-box-dark font-code text-[10px] sm:text-[11px] tracking-[0.2em] ${focusGold}`}
+          >
+            RE-AUTHORIZE
+          </button>
+        )}
         <a
           href={MCP_DOCS}
           target="_blank"
@@ -107,7 +129,7 @@ export function ConnectPanel({
       <div className="mt-4 border border-plimsoll/40 bg-plimsoll/10 p-3 flex items-start gap-2.5">
         <Lock className="w-4 h-4 text-plimsoll shrink-0 mt-0.5" strokeWidth={2} aria-hidden />
         <p className="font-grotesk text-[11px] leading-snug text-white/60">
-          Do not paste API secrets here. Official MCP: {MCP_ENDPOINT}. Tokens stay server-side.
+          Do not paste API secrets here. CONNECT BINANCE opens official Agent OS OAuth. The token stays on Oregon. Official MCP: {MCP_ENDPOINT}.
         </p>
       </div>
     </section>
