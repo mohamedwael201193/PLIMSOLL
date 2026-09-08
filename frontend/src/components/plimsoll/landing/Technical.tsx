@@ -12,7 +12,7 @@ const LINES: Array<{ prefix: string; body: string[]; accent?: boolean }> = [
   { prefix: "> ", body: ["POST /v1/intent ", "→ ", "LIVE | UNKNOWN"], accent: true },
   { prefix: "> ", body: ["depth: ", "1000 levels · walked deterministically"] },
   { prefix: "> ", body: ["filters: ", "live exchangeInfo LOT_SIZE / MARKET_LOT_SIZE / NOTIONAL"] },
-  { prefix: "> ", body: ["payload labels: ", "LIVE | REPLAY | PAPER | SIMULATED"], accent: true },
+  { prefix: "> ", body: ["payload labels: ", "LIVE | REPLAY | PAPER | TESTNET | SIMULATED"], accent: true },
   { prefix: "> ", body: ["partial fills: ", "NOT success"] },
   { prefix: "> ", body: ["stale snapshots: ", "REFUSE ACTION"], accent: true },
 ];
@@ -24,7 +24,7 @@ const STATS = [
   },
   {
     title: "LABELLED PAYLOADS",
-    line: "Every payload carries LIVE, REPLAY, PAPER or SIMULATED. Nothing pretends to be what it is not.",
+    line: "Every payload carries LIVE, REPLAY, PAPER, TESTNET or SIMULATED. Nothing pretends to be what it is not.",
   },
   {
     title: "POSITION VERSUS POLICY",

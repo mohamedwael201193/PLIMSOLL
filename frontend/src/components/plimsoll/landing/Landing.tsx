@@ -34,7 +34,7 @@ export default function Landing({ glitch }: Props) {
       <LiveCapacity glitch={glitch} />
 
       <Marquee
-        text="MEASURED. LEGALIZED. APPROVED. — YOUR PORTFOLIO VALUE IS NOT YOUR EXIT VALUE"
+        text="MEASURED. LEGALIZED. APPROVED. — YOUR PORTFOLIO VALUE IS NOT YOUR EXIT CAPACITY"
         variant="gold"
         reverse
       />

@@ -36,6 +36,7 @@ Spine: **invert → legalize → approval → act → verify → re-invert**.
 - Database: Supabase PostgreSQL (migrations via Alembic on `DIRECT_URL`; pooler URL at runtime with `pgbouncer` query stripped and prepared statements disabled)
 - Market data: official public Spot REST (`/api/v3/depth`, `/api/v3/ticker/24hr`, `/api/v3/exchangeInfo`). If `api.binance.com` returns 418/4xx from a cloud IP, the backend retries the official market-data host `https://data-api.binance.vision` (market data only; not trading).
 - Account / orders: official Agent OS MCP (`https://agent.binance.com/mcp/agentic`) after runtime tool discovery
+- PLIMSOLL MCP (Oregon `POST /mcp`): health, oauth status, account view, capacity, intent. **No execute tool.** A supported Agent client can add both endpoints. Public capacity still uses official Spot REST.
 - Frontend: Next.js (App Router, hash routes). Browser talks **only** to this backend. No Binance secrets in the client. Visual system is the `front` design, connected to Oregon — not a redesign.
 
 Every payload is labelled `LIVE`, `REPLAY`, `PAPER`, `TESTNET`, or `SIMULATED`. Replay fixtures are tests, not product data.

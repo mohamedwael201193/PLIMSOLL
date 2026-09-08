@@ -18,18 +18,22 @@ const MCP_ENDPOINT = "https://agent.binance.com/mcp/agentic";
 
 const SECTIONS = [
   { id: "overview", num: "01", label: "OVERVIEW" },
-  { id: "how-capacity-works", num: "02", label: "HOW CAPACITY WORKS" },
-  { id: "user-constitution", num: "03", label: "USER CONSTITUTION" },
-  { id: "agent-loop", num: "04", label: "THE AGENT LOOP" },
-  { id: "agent-os", num: "05", label: "BINANCE AGENT OS" },
-  { id: "mcp", num: "06", label: "MCP" },
-  { id: "execution", num: "07", label: "EXECUTION" },
-  { id: "read-back", num: "08", label: "READ-BACK" },
-  { id: "re-solve", num: "09", label: "CONTINUOUS RE-SOLVE" },
-  { id: "safety", num: "10", label: "SAFETY" },
-  { id: "api", num: "11", label: "API" },
-  { id: "examples", num: "12", label: "EXAMPLES" },
-  { id: "faq", num: "13", label: "FAQ" },
+  { id: "problem", num: "02", label: "PROBLEM" },
+  { id: "how-capacity-works", num: "03", label: "HOW CAPACITY WORKS" },
+  { id: "user-constitution", num: "04", label: "USER CONSTITUTION" },
+  { id: "agent-loop", num: "05", label: "THE AGENT LOOP" },
+  { id: "agent-os", num: "06", label: "BINANCE AGENT OS" },
+  { id: "mcp", num: "07", label: "MCP" },
+  { id: "connection", num: "08", label: "CONNECTION" },
+  { id: "approval", num: "09", label: "APPROVAL" },
+  { id: "execution", num: "10", label: "EXECUTION" },
+  { id: "read-back", num: "11", label: "READ-BACK" },
+  { id: "re-solve", num: "12", label: "CONTINUOUS RE-SOLVE" },
+  { id: "safety", num: "13", label: "SAFETY" },
+  { id: "limitations", num: "14", label: "LIMITATIONS" },
+  { id: "api", num: "15", label: "API" },
+  { id: "examples", num: "16", label: "EXAMPLES" },
+  { id: "faq", num: "17", label: "FAQ" },
 ] as const;
 
 const LOOP_LINES: string[] = [
@@ -245,9 +249,24 @@ export default function DocsPage({ glitch }: Props) {
               </div>
             </section>
 
-            {/* 02 — HOW CAPACITY WORKS */}
+            {/* 02 — PROBLEM */}
+            <section id="problem" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
+              <SectionHead num="02" title="PROBLEM" />
+              <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
+                Mark value is the last price times quantity. Exit capacity is how much of that
+                exposure the visible book can actually absorb under the cost, time, participation,
+                and book-fraction constraints you declare. Those two numbers are not the same —
+                especially on thinner Spot pairs.
+              </p>
+              <p className="mt-4 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/70">
+                PLIMSOLL inverts the question: given this live snapshot and your constitution, how
+                much exposure still fits? Then it re-solves as the book changes.
+              </p>
+            </section>
+
+            {/* 03 — HOW CAPACITY WORKS */}
             <section id="how-capacity-works" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="02" title="HOW CAPACITY WORKS" />
+              <SectionHead num="03" title="HOW CAPACITY WORKS" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
                 Capacity is the minimum of several walls. Each wall is measured, not guessed.
               </p>
@@ -297,7 +316,7 @@ binding        = the constraint that produced the minimum`}
 
             {/* 03 — USER CONSTITUTION */}
             <section id="user-constitution" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="03" title="USER CONSTITUTION" />
+              <SectionHead num="04" title="USER CONSTITUTION" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
                 The constitution is the constraint set you declare before any math runs. PLIMSOLL
                 never chooses it for you and never edits it behind your back.
@@ -332,7 +351,7 @@ binding        = the constraint that produced the minimum`}
 
             {/* 04 — THE AGENT LOOP */}
             <section id="agent-loop" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="04" title="THE AGENT LOOP" />
+              <SectionHead num="05" title="THE AGENT LOOP" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
                 One spine, eight steps, every pass. OBSERVE → UNDERSTAND → PLAN → DECIDE → ASK →
                 ACT → VERIFY → ADAPT.
@@ -364,7 +383,7 @@ binding        = the constraint that produced the minimum`}
 
             {/* 05 — BINANCE AGENT OS */}
             <section id="agent-os" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="05" title="BINANCE AGENT OS" />
+              <SectionHead num="06" title="BINANCE AGENT OS" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
                 PLIMSOLL is built with Binance Agent OS. Public estimated exit capacity uses official
                 Spot market data. Account access, approved execution, and order read-back use the
@@ -415,14 +434,20 @@ binding        = the constraint that produced the minimum`}
               </p>
             </section>
 
-            {/* 06 — MCP */}
+            {/* 07 — MCP */}
             <section id="mcp" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="06" title="MCP" />
+              <SectionHead num="07" title="MCP" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
                 Public estimated exit capacity uses official Binance Spot REST. Authenticated
                 account access, approved execution, and order read-back use Binance Agent OS MCP.
                 Tools are discovered at runtime, reads and writes are separated, and the write path
                 is gated behind approval.
+              </p>
+              <p className="mt-4 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/70">
+                Oregon also exposes a PLIMSOLL MCP at https://plimsoll-oregon.onrender.com/mcp with
+                health, oauth status, account, capacity, and intent tools. It has no execute tool.
+                A supported Agent client can add both endpoints: Binance for the Agentic account,
+                PLIMSOLL for estimated exit capacity.
               </p>
               <a
                 href="#/docs/mcp"
@@ -433,9 +458,34 @@ binding        = the constraint that produced the minimum`}
               </a>
             </section>
 
-            {/* 07 — EXECUTION */}
+            {/* 08 — CONNECTION */}
+            <section id="connection" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
+              <SectionHead num="08" title="CONNECTION" />
+              <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
+                Until a supported Agent OS client authorizes the Agentic account, the site stays in
+                PUBLIC MODE: live market data and estimated exit capacity, no private balances, no
+                execution. Opening Binance OAuth is not a connection.
+              </p>
+              <p className="mt-4 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/70">
+                Official Agent OS OAuth is CIMD + PKCE. This web client reaches the official
+                authorize endpoint and is refused as an unsupported AI agent (3346001). Tokens never
+                enter the browser. Do not paste API keys or another client’s access token.
+              </p>
+            </section>
+
+            {/* 09 — APPROVAL */}
+            <section id="approval" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
+              <SectionHead num="09" title="APPROVAL" />
+              <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
+                An approval is snapshot-bound and expires. It is not an order. Typing CONFIRM is a
+                separate operator step after the exact order card is shown. If the book moves, the
+                approval is invalid and the desk must re-solve.
+              </p>
+            </section>
+
+            {/* 10 — EXECUTION */}
             <section id="execution" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="07" title="EXECUTION" />
+              <SectionHead num="10" title="EXECUTION" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
                 A live write requires all five, every time:
               </p>
@@ -468,9 +518,9 @@ binding        = the constraint that produced the minimum`}
               </div>
             </section>
 
-            {/* 08 — READ-BACK */}
+            {/* 11 — READ-BACK */}
             <section id="read-back" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="08" title="READ-BACK" />
+              <SectionHead num="11" title="READ-BACK" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
                 Every order is read back from the exchange — status, executed quantity, average
                 price — and every balance is reconciled after the fact.
@@ -493,9 +543,9 @@ binding        = the constraint that produced the minimum`}
               </p>
             </section>
 
-            {/* 09 — CONTINUOUS RE-SOLVE */}
+            {/* 12 — CONTINUOUS RE-SOLVE */}
             <section id="re-solve" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="09" title="CONTINUOUS RE-SOLVE" />
+              <SectionHead num="12" title="CONTINUOUS RE-SOLVE" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
                 Capacity is not a number you get once. The watcher re-solves your held position
                 against every new snapshot — and when the market thins, the line moves down.
@@ -513,9 +563,9 @@ binding        = the constraint that produced the minimum`}
               </p>
             </section>
 
-            {/* 10 — SAFETY */}
+            {/* 13 — SAFETY */}
             <section id="safety" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="10" title="SAFETY" />
+              <SectionHead num="13" title="SAFETY" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
                 Autonomy without losing control. The loop can move fast because the blast radius is
                 small by construction.
@@ -536,9 +586,22 @@ binding        = the constraint that produced the minimum`}
               </div>
             </section>
 
-            {/* 11 — API */}
+            {/* 14 — LIMITATIONS */}
+            <section id="limitations" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
+              <SectionHead num="14" title="LIMITATIONS" />
+              <ul className="mt-5 space-y-3 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
+                <li>— Capacity uses the visible book and 24h quote volume. Icebergs and spoofing are not modelled.</li>
+                <li>— Estimated exit capacity is not a guaranteed exit, guaranteed liquidity, or a maximum safe size.</li>
+                <li>— MCP getAccount does not label Agentic vs master. Use the Agentic virtual sub-account, not a Normal Sub.</li>
+                <li>— This CIMD web client is refused as unsupported agent 3346001. Oregon stays unbound until a supported Agent OS client binds the Agentic account.</li>
+                <li>— Live writes stay off until WRITES_ENABLED, a fresh snapshot-bound approval, runtime MCP bind, and typed CONFIRM.</li>
+                <li>— Works with currently tradable Spot symbols from live exchange metadata — not a claim of every listed coin forever.</li>
+              </ul>
+            </section>
+
+            {/* 15 — API */}
             <section id="api" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="11" title="API" />
+              <SectionHead num="15" title="API" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
                 The request carries intent, symbol and your constraints. The response carries the
                 capacity, the binding constraint, the recommendation and the snapshot it was
@@ -610,9 +673,9 @@ Not a claim that every listed coin remains tradable forever.`}
               </div>
             </section>
 
-            {/* 12 — EXAMPLES */}
+            {/* 16 — EXAMPLES */}
             <section id="examples" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="12" title="EXAMPLES" />
+              <SectionHead num="16" title="EXAMPLES" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
                 Ask for $10,000 of ARK on a one-day exit. Numbers below come from the live Oregon
                 backend — never hardcoded.
@@ -638,9 +701,9 @@ Not a claim that every listed coin remains tradable forever.`}
               </p>
             </section>
 
-            {/* 13 — FAQ */}
+            {/* 17 — FAQ */}
             <section id="faq" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
-              <SectionHead num="13" title="FAQ" />
+              <SectionHead num="17" title="FAQ" />
               <Accordion type="single" collapsible className="mt-6">
                 {FAQ_ITEMS.map((item, i) => (
                   <AccordionItem key={item.q} value={`faq-${i}`} className="border-plimsoll/20">

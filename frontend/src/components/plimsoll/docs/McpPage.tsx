@@ -22,11 +22,15 @@ interface Props {
 }
 
 const MCP_ENDPOINT = "https://agent.binance.com/mcp/agentic";
+const PLIMSOLL_MCP = "https://plimsoll-oregon.onrender.com/mcp";
 
 const CLIENT_CONFIG = `{
   "mcpServers": {
     "binance-agent-os": {
       "url": "https://agent.binance.com/mcp/agentic"
+    },
+    "plimsoll": {
+      "url": "https://plimsoll-oregon.onrender.com/mcp"
     }
   }
 }`;
@@ -265,8 +269,23 @@ export default function McpPage({ glitch }: Props) {
             <code>{CLIENT_CONFIG}</code>
           </pre>
           <p className="mt-3 font-code text-[8px] sm:text-[9px] tracking-[0.2em] text-white/35">
-            ADD THIS URL IN A SUPPORTED AGENT CLIENT. NO API KEYS IN THE BROWSER.
+            ADD BOTH URLS IN A SUPPORTED AGENT CLIENT. BINANCE AGENT OS HOLDS THE ACCOUNT. PLIMSOLL MCP HAS NO EXECUTE TOOL.
           </p>
+        </motion.div>
+
+        <motion.div {...reveal(0.05)} className="mt-8 border border-plimsoll/25 bg-plimsoll-black/60 p-5 sm:p-6">
+          <div className="flex flex-wrap justify-between gap-2 font-code text-[10px] tracking-[0.25em] text-plimsoll">
+            <span>PLIMSOLL MCP — CAPACITY ONLY</span>
+            <span>NO EXECUTE</span>
+          </div>
+          <p className="mt-3 font-grotesk text-[13px] text-white/65 leading-relaxed">
+            Oregon JSON-RPC MCP for estimated exit capacity. Live tools: plimsoll.health,
+            plimsoll.oauth_status, plimsoll.account, plimsoll.capacity, plimsoll.intent. Account
+            rows stay empty until a supported Agent OS bind. This endpoint never places orders.
+          </p>
+          <div className="mt-4 border border-plimsoll/40 bg-plimsoll-black px-4 py-4 font-code text-[12px] sm:text-[15px] text-plimsoll break-all select-all">
+            {PLIMSOLL_MCP}
+          </div>
         </motion.div>
 
         {/* ── what MCP does: read vs write ── */}
