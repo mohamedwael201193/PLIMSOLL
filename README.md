@@ -118,6 +118,8 @@ Render **free** web service in **Oregon** (`https://plimsoll-oregon.onrender.com
 
 Blueprint: `render.yaml` (secrets `sync: false`).
 
+Frontend (Vercel): https://plimsoll-jade.vercel.app — browser talks only to the Oregon API. Classification is whatever the backend returns (`LIVE` only when the snapshot is live).
+
 ## Safety
 
 - No withdrawals
