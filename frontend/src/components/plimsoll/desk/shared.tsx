@@ -142,6 +142,7 @@ export function BindingBadge({ binding }: { binding: Binding }) {
 
 export interface ConstraintStepperProps {
   label: string;
+  hint?: string;
   value: number;
   min: number;
   max: number;
@@ -150,7 +151,7 @@ export interface ConstraintStepperProps {
   onChange: (v: number) => void;
 }
 
-export function ConstraintStepper({ label, value, min, max, step, unit, onChange }: ConstraintStepperProps) {
+export function ConstraintStepper({ label, hint, value, min, max, step, unit, onChange }: ConstraintStepperProps) {
   const labelId = `stepper-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   const canDown = value - step >= min - 1e-9;
   const canUp = value + step <= max + 1e-9;
@@ -165,6 +166,7 @@ export function ConstraintStepper({ label, value, min, max, step, unit, onChange
         </span>
         <span className="font-code text-[11px] text-plimsoll tabular-nums">{formatStepperValue(value, unit)}</span>
       </div>
+      {hint && <p className="mb-2 font-grotesk text-[11px] leading-snug text-white/45">{hint}</p>}
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -209,16 +211,17 @@ export function ConstraintStepper({ label, value, min, max, step, unit, onChange
 const PANEL_STEPPERS: {
   key: Exclude<keyof CapacityConstraints, "symbol">;
   label: string;
+  hint: string;
   min: number;
   max: number;
   step: number;
   unit: string;
 }[] = [
-  { key: "targetNotional", label: "TARGET_NOTIONAL", min: 500, max: 100_000, step: 500, unit: "USD" },
-  { key: "maxExitCostBps", label: "MAX_EXIT_COST", min: 10, max: 200, step: 5, unit: "BPS" },
-  { key: "exitHorizonDays", label: "EXIT_HORIZON", min: 0.25, max: 7, step: 0.25, unit: "DAYS" },
-  { key: "participationPct", label: "PARTICIPATION", min: 1, max: 30, step: 1, unit: "% ADV" },
-  { key: "bookFractionPct", label: "BOOK_FRACTION", min: 1, max: 100, step: 1, unit: "% BOOK" },
+  { key: "targetNotional", label: "TARGET_NOTIONAL", hint: "The exposure you want to hold or add, in quote notional.", min: 500, max: 100_000, step: 500, unit: "USD" },
+  { key: "maxExitCostBps", label: "MAX_EXIT_COST", hint: "Maximum all-in cost you are willing to tolerate when exiting.", min: 10, max: 200, step: 5, unit: "BPS" },
+  { key: "exitHorizonDays", label: "EXIT_HORIZON", hint: "How many days you allow for that exit.", min: 0.25, max: 7, step: 0.25, unit: "DAYS" },
+  { key: "participationPct", label: "PARTICIPATION", hint: "How much of recent market volume you are willing to represent.", min: 1, max: 30, step: 1, unit: "% ADV" },
+  { key: "bookFractionPct", label: "BOOK_FRACTION", hint: "How much of currently visible bids you are willing to rely on.", min: 1, max: 100, step: 1, unit: "% BOOK" },
 ];
 
 export function ConstraintsPanel({
@@ -251,6 +254,7 @@ export function ConstraintsPanel({
           <ConstraintStepper
             key={s.key}
             label={s.label}
+            hint={s.hint}
             value={constraints[s.key]}
             min={s.min}
             max={s.max}

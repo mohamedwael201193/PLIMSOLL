@@ -1,8 +1,8 @@
 # PLIMSOLL
 
-**Estimated exit capacity under the user’s stated constraints.**
+**Continuous exposure capacity for agentic trading.**
 
-PLIMSOLL is a Binance Agent OS product. It does not claim a “maximum safe size,” a guaranteed exit, guaranteed liquidity, or invented mathematics. Capacity is an estimate on a captured market snapshot, then legalized with official Spot filters, then executed only after an explicit approval.
+PLIMSOLL estimates how much exposure the market can support under your stated exit constraints — and keeps re-solving as conditions change. It does not claim a “maximum safe size,” a guaranteed exit, or invented mathematics. Capacity is an estimate on a captured market snapshot, then legalized with official Spot filters, then executed only after an explicit approval.
 
 ## Problem
 
@@ -40,9 +40,9 @@ Every payload is labelled `LIVE`, `REPLAY`, `PAPER`, `TESTNET`, or `SIMULATED`. 
 
 Writes default to **off** (`WRITES_ENABLED=false`). `POST /v1/execute` is not authorization.
 
-Official Binance Agent OS OAuth (CIMD + PKCE) is implemented on Oregon. **CONNECT BINANCE** opens `accounts.binance.com` Agentic Account Access. Chrome-verified on 2026-09-08: Binance then refuses this web client as an unsupported AI agent (`3346001`). Supported launch clients are Claude, Claude Code, Codex, ChatGPT, Cursor, and VS Code — not a custom CIMD web app. Oregon stays unbound. We do not impersonate those clients.
+Official Binance Agent OS OAuth (CIMD + PKCE) is implemented on Oregon. **TRY WEB AUTHORIZE** reaches `accounts.binance.com` Agentic Account Access. Chrome-verified on 2026-09-08: Binance refuses this CIMD web client as an unsupported AI agent (`3346001`). Supported launch clients are Claude, Claude Code, Codex, ChatGPT, Cursor, and VS Code. Oregon stays unbound. We do not impersonate those clients.
 
-Supported-agent path: add official MCP `https://agent.binance.com/mcp/agentic` in Cursor/Claude/Codex, complete Binance OAuth there, and add PLIMSOLL capacity MCP `https://plimsoll-oregon.onrender.com/mcp` (health, capacity, intent, honest account status — **no execute tool**).
+Supported-agent path: add official MCP `https://agent.binance.com/mcp/agentic` in a supported client and complete Binance OAuth there. Public mode on the site still computes LIVE estimated exit capacity from official Spot REST. Private balances and execution require a real Agent OS bind.
 
 A live Spot order from the desk still requires:
 
@@ -148,7 +148,7 @@ CI: GitHub Actions runs backend `pytest` and frontend `npm test` + `npm run buil
 
 - Capacity uses **visible** book and 24h volume. Icebergs and spoofing are not modelled.
 - MCP `getAccount` does not label Agentic vs master. The operator must use the Agentic virtual sub-account created at MCP OAuth, not a Normal Sub.
-- CONNECT BINANCE reaches official Agentic Account Access. Binance currently refuses this CIMD web client as an unsupported AI agent (`3346001`). Oregon stays unbound. We do not impersonate Codex, Claude, or any other listed agent.
+- Agent OS web authorization currently requires a Binance-supported Agent client. This CIMD web client is refused (`3346001`). Oregon stays unbound. We do not impersonate listed agents.
 - Live financial writes are blocked until `CONFIRM`.
 - Free Render instances sleep; the first request after idle can take about a minute.
 - Some cloud egress IPs are banned by Binance (`HTTP 418`). Production market data uses official REST hosts from an Oregon instance.
@@ -158,10 +158,10 @@ CI: GitHub Actions runs backend `pytest` and frontend `npm test` + `npm run buil
 
 Live UI: https://plimsoll-jade.vercel.app (`/`, `#/app`, `#/docs`, `#/docs/mcp`) against Oregon `https://plimsoll-oregon.onrender.com`.
 
-1. Open the landing. The ARKUSDT strip is a **LIVE** Oregon ticker feed, not a mock.
+1. Open the landing. No warning gate. The ARKUSDT strip is a **LIVE** Oregon ticker feed, not a mock.
 2. On `#/app`, ask for a dollar size (try `$1000` then `$10000` of ARK with a one-day exit). Read estimated exit capacity, cost vs time, and binding. Numbers come from `POST /v1/intent`.
 3. If the agent proposes a legal size, issue a snapshot-bound approval. That token is **not** a financial write.
-4. Click **CONNECT BINANCE**. Oregon starts official Agent OS OAuth (PKCE, CIMD). Chrome reaches Binance Agentic Account Access. As of 2026-09-08 Binance shows unsupported-agent `3346001` for this client, so the Agentic account does **not** bind. Zero balances display as zero only after a real bind.
+4. Settings shows **PUBLIC MODE** until a supported Agent OS client binds the Agentic account. **TRY WEB AUTHORIZE** reaches official Binance OAuth and currently returns unsupported-agent `3346001`.
 5. A live order happens only after the operator types **`CONFIRM`** plus `WRITES_ENABLED=true`. Oregon `POST /v1/execution/prepare` checks live minNotional against the Agentic USDT balance first.
 6. `POST /v1/resolve` re-inverts a held position. Over-capacity → `TRIM_HELD`, never an automatic sell.
 

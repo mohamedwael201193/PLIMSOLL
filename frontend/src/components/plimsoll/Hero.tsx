@@ -122,14 +122,14 @@ export default function Hero({ glitch }: Props) {
               aria-label="Check your capacity — open the desk"
             >
               <DiamondMark className="w-4 h-4 shrink-0" />
-              <span>CHECK_YOUR_CAPACITY</span>
+              <span>CHECK YOUR CAPACITY</span>
             </a>
             <a
-              href="#how-it-thinks"
+              href="#/app"
               className="tech-box inline-flex items-center gap-3 font-code text-xs sm:text-sm tracking-[0.15em] text-plimsoll-black"
-              aria-label="See how it works"
+              aria-label="Open the desk"
             >
-              <span>SEE_HOW_IT_WORKS</span>
+              <span>OPEN THE DESK</span>
             </a>
           </motion.div>
 

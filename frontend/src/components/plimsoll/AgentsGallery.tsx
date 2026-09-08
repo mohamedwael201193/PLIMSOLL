@@ -11,7 +11,7 @@ interface Props {
 }
 
 const INTRO =
-  "Financial intelligence entities — not mascots. Each role maps to a stage of the agent loop.";
+  "PLIMSOLL estimates how much exposure the market can support under your stated exit constraints — and keeps re-solving as conditions change.";
 
 /** Loop duty — what each entity contributes to the 8-step spine. */
 const LOOP_DUTY: Record<string, string> = {

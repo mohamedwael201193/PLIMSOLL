@@ -241,12 +241,12 @@ function PositionComparePanel({
 
       {!connected ? (
         <div className="mt-5 py-6 text-center">
-          <div className="font-code text-[10px] tracking-[0.25em] text-plimsoll/60">[ CONNECT BINANCE ]</div>
+          <div className="font-code text-[10px] tracking-[0.25em] text-plimsoll/60">[ NO CONNECTED ACCOUNT ]</div>
           <p className="mt-2 font-grotesk text-[12px] leading-relaxed text-white/50 max-w-sm mx-auto">
-            {reason || "No connected Agentic account. This page will not invent a position."}
+            {reason || "No connected Agentic account. This page will not invent a position. Authorize through a supported Agent."}
           </p>
           <a href="#/settings" className={`tech-box-dark inline-flex font-code text-[11px] tracking-[0.2em] mt-6 ${focusGold}`}>
-            CONNECT
+            SETTINGS
           </a>
         </div>
       ) : position ? (

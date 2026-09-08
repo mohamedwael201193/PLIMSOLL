@@ -20,11 +20,11 @@ export function ConnectPanel({
   const [authorizing, setAuthorizing] = useState(false);
   const kindLabel =
     account.accountKind === "SPOT_UNLABELLED"
-      ? "AGENTIC ACCOUNT (SPOT — UNLABELLED BY MCP)"
+      ? "AGENTIC ACCOUNT (SPOT — UNLABELLED BY MCP getAccount)"
       : account.accountKind === "NOT_CONNECTED"
-        ? "NOT CONNECTED"
+        ? "PUBLIC MODE"
         : account.accountKind.replace(/_/g, " ");
-  const phase = authorizing ? "AUTHORIZING" : account.phase;
+  const phase = authorizing ? "AUTHORIZING" : account.connected ? "AGENT CONNECTED" : "PUBLIC MODE";
 
   const startOAuth = () => {
     setAuthorizing(true);
@@ -33,27 +33,35 @@ export function ConnectPanel({
 
   return (
     <section
-      aria-label="Connect Binance"
+      aria-label="Agent OS connection"
       className="corner-frame-4 text-plimsoll border border-plimsoll/30 bg-plimsoll-ink p-4 sm:p-6"
     >
       <Corners />
       <div className="flex flex-wrap items-center justify-between gap-2 font-code text-[10px] tracking-[0.3em]">
-        <span className="text-plimsoll">CONNECT BINANCE</span>
+        <span className="text-plimsoll">SUPPORTED AGENT CONNECTION</span>
         <span className={account.connected ? "text-emerald-400" : "text-plimsoll/50"}>{phase}</span>
       </div>
 
       <div className="mt-4 font-display text-xl sm:text-2xl text-white">
-        {account.connected ? "CONNECTED" : "NO CONNECTED ACCOUNT"}
+        {account.connected ? "AGENTIC ACCOUNT" : "NO CONNECTED ACCOUNT"}
       </div>
       <p className="mt-2 font-grotesk text-[13px] leading-relaxed text-white/65">
         {account.connected
           ? kindLabel
-          : "Public market data is live. CONNECT opens official Agent OS OAuth. Binance currently refuses this CIMD web client as an unsupported AI agent (3346001). Oregon stays unbound until Binance allowlists PLIMSOLL. We do not impersonate another agent."}
+          : "Public mode: live market data and estimated exit capacity. Private balances and execution stay off until a supported Binance Agent OS client authorizes the Agentic account."}
       </p>
+      {!account.connected && (
+        <p className="mt-3 font-grotesk text-[13px] leading-relaxed text-white/55">
+          Binance currently requires a supported Agent client for this Agent OS authorization flow.
+          Use Codex, Claude, Cursor, VS Code, ChatGPT, or another currently supported client. Do not
+          paste API secrets here.
+        </p>
+      )}
 
-      {account.reason && (
+      {account.reason && account.connected === false && (
         <p className="mt-3 font-code text-[10px] tracking-[0.12em] text-rose-300/90 leading-relaxed">
-          {account.reason}
+          Binance did not authorize this web client. Technical reason: unsupported AI agent (3346001).
+          Next: authorize through a supported Agent. Oregon never receives a browser token.
         </p>
       )}
       {account.error && !account.reason && (
@@ -93,43 +101,52 @@ export function ConnectPanel({
       )}
 
       <div className="mt-5 flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={
-            account.connected
-              ? () => {
-                  void account.refresh();
-                  onRefresh?.();
-                }
-              : startOAuth
-          }
-          className={`tech-box-dark font-code text-[10px] sm:text-[11px] tracking-[0.2em] ${focusGold}`}
-        >
-          {authorizing ? "AUTHORIZING…" : account.connected ? "READ ACCOUNT" : "CONNECT BINANCE"}
-        </button>
-        {account.connected && (
+        {account.connected ? (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                void account.refresh();
+                onRefresh?.();
+              }}
+              className={`tech-box-dark font-code text-[10px] sm:text-[11px] tracking-[0.2em] ${focusGold}`}
+            >
+              READ ACCOUNT
+            </button>
+            <button
+              type="button"
+              onClick={startOAuth}
+              className={`tech-box-dark font-code text-[10px] sm:text-[11px] tracking-[0.2em] ${focusGold}`}
+            >
+              RE-AUTHORIZE
+            </button>
+          </>
+        ) : (
+          <a
+            href={MCP_DOCS}
+            target="_blank"
+            rel="noreferrer"
+            className={`tech-box-dark font-code text-[10px] sm:text-[11px] tracking-[0.2em] ${focusGold}`}
+          >
+            SUPPORTED AGENT DOCS
+          </a>
+        )}
+        {!account.connected && (
           <button
             type="button"
             onClick={startOAuth}
             className={`tech-box-dark font-code text-[10px] sm:text-[11px] tracking-[0.2em] ${focusGold}`}
           >
-            RE-AUTHORIZE
+            {authorizing ? "AUTHORIZING…" : "TRY WEB AUTHORIZE"}
           </button>
         )}
-        <a
-          href={MCP_DOCS}
-          target="_blank"
-          rel="noreferrer"
-          className={`tech-box-dark font-code text-[10px] sm:text-[11px] tracking-[0.2em] ${focusGold}`}
-        >
-          AGENT OS OAUTH
-        </a>
       </div>
 
       <div className="mt-4 border border-plimsoll/40 bg-plimsoll/10 p-3 flex items-start gap-2.5">
         <Lock className="w-4 h-4 text-plimsoll shrink-0 mt-0.5" strokeWidth={2} aria-hidden />
         <p className="font-grotesk text-[11px] leading-snug text-white/60">
-          Do not paste API secrets here. CONNECT BINANCE opens official Agent OS OAuth. The token would stay on Oregon. Live authorize currently stops at Binance unsupported-agent 3346001. Official MCP: {MCP_ENDPOINT}.
+          Official MCP: {MCP_ENDPOINT}. TRY WEB AUTHORIZE reaches Binance OAuth; this CIMD web client
+          is currently refused (3346001). We do not impersonate Codex, Claude, Cursor, VS Code, or ChatGPT.
         </p>
       </div>
     </section>

@@ -121,8 +121,7 @@ export default function DocsPage({ glitch }: Props) {
             PLIMSOLL <span className="text-outline-gold">DOCS</span>
           </h1>
           <motion.p {...reveal(0.1)} className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/60 max-w-xl">
-            Everything PLIMSOLL claims, in one place — and everything it refuses to claim.
-            Thirteen sections, no marketing.
+            PLIMSOLL estimates how much exposure the market can support under your stated exit constraints — and keeps re-solving as conditions change.
           </motion.p>
         </header>
 

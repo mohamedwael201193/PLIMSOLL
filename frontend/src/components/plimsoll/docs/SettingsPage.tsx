@@ -24,6 +24,7 @@ interface Constitution {
 interface StepperSpec {
   key: keyof Constitution;
   label: string;
+  hint: string;
   min: number;
   max: number;
   step: number;
@@ -36,6 +37,7 @@ const STEPPERS: StepperSpec[] = [
   {
     key: "targetNotional",
     label: "TARGET_NOTIONAL",
+    hint: "The exposure you want to hold or add, in quote notional.",
     min: 500,
     max: 100_000,
     step: 500,
@@ -44,6 +46,7 @@ const STEPPERS: StepperSpec[] = [
   {
     key: "maxExitCostBps",
     label: "MAX_EXIT_COST",
+    hint: "Maximum all-in cost you are willing to tolerate when exiting.",
     min: 10,
     max: 200,
     step: 5,
@@ -52,6 +55,7 @@ const STEPPERS: StepperSpec[] = [
   {
     key: "exitHorizonDays",
     label: "EXIT_HORIZON",
+    hint: "How many days you allow for that exit.",
     min: 0.25,
     max: 7,
     step: 0.25,
@@ -60,6 +64,7 @@ const STEPPERS: StepperSpec[] = [
   {
     key: "participationPct",
     label: "PARTICIPATION",
+    hint: "How much of recent market volume you are willing to represent.",
     min: 1,
     max: 30,
     step: 1,
@@ -68,6 +73,7 @@ const STEPPERS: StepperSpec[] = [
   {
     key: "bookFractionPct",
     label: "BOOK_FRACTION",
+    hint: "How much of currently visible bids you are willing to rely on.",
     min: 1,
     max: 100,
     step: 1,
@@ -131,7 +137,6 @@ export default function SettingsPage({ glitch }: Props) {
   // so the initializers read localStorage exactly once at first client render.
   const [constitution, setConstitution] = useState<Constitution>(readConstitution);
   const [safeMode, setSafeMode] = useState<boolean>(readSafeModeFlag);
-  const [initialSafeMode] = useState<boolean>(readSafeModeFlag);
   const [armed, setArmed] = useState(false);
   const { toast } = useToast();
   const disarmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -191,6 +196,7 @@ export default function SettingsPage({ glitch }: Props) {
     setSafeMode(next);
     try {
       window.localStorage.setItem(SAFE_MODE_KEY, next ? "1" : "0");
+      window.dispatchEvent(new Event("plimsoll-motion"));
     } catch {
       /* storage unavailable — toggle applies to this session only */
     }
@@ -213,8 +219,6 @@ export default function SettingsPage({ glitch }: Props) {
     });
     window.setTimeout(() => t.dismiss(), 5000);
   };
-
-  const reloadNeeded = safeMode !== initialSafeMode;
 
   return (
     <main
@@ -240,9 +244,7 @@ export default function SettingsPage({ glitch }: Props) {
             <span className="text-outline-gold">YOUR CONSTITUTION</span>
           </h1>
           <motion.p {...reveal(0.1)} className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/60 max-w-xl">
-            The constraint set you declare here is the set the math obeys. Every capacity number
-            on this site is computed against exactly these five values — change them and the line
-            moves.
+            PLIMSOLL estimates how much exposure the market can support under your stated exit constraints — and keeps re-solving as conditions change.
           </motion.p>
         </header>
 
@@ -323,20 +325,15 @@ export default function SettingsPage({ glitch }: Props) {
               <div className="flex items-start justify-between gap-4 p-4 sm:p-5">
                 <div className="min-w-0">
                   <div className="font-code text-[10px] sm:text-[11px] tracking-[0.2em] text-plimsoll">
-                    SAFE_MODE
+                    REDUCED MOTION
                   </div>
                   <p className="mt-1.5 font-grotesk text-[12px] text-white/55 leading-relaxed">
-                    Toggles CRT / glitch effects off — the instrument renders flat and steady.
+                    Turns off CRT overlay, glitch, and custom cursor. Also follows your system prefers-reduced-motion setting.
                   </p>
-                  {reloadNeeded && (
-                    <div className="mt-2 font-code text-[9px] tracking-[0.2em] text-plimsoll blink" role="status">
-                      RELOAD TO APPLY
-                    </div>
-                  )}
                 </div>
                 <Switch
                   id="safe-mode"
-                  label="Safe mode — disable CRT and glitch effects"
+                  label="Reduced motion — disable CRT and glitch effects"
                   checked={safeMode}
                   onChange={toggleSafeMode}
                 />
@@ -415,6 +412,7 @@ function StepperRow({
         </span>
         <span className="font-code text-[11px] text-plimsoll tabular-nums shrink-0">{spec.fmt(value)}</span>
       </div>
+      <p className="mb-2 font-grotesk text-[11px] leading-snug text-white/45">{spec.hint}</p>
       <div className="flex items-center gap-2">
         <button
           type="button"

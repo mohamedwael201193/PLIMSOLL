@@ -1,10 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomCursor from "@/components/plimsoll/CustomCursor";
-import ExperienceWarning from "@/components/plimsoll/ExperienceWarning";
-import Preloader from "@/components/plimsoll/Preloader";
 import Header from "@/components/plimsoll/Header";
 import MarketStrip from "@/components/plimsoll/MarketStrip";
 import Footer from "@/components/plimsoll/Footer";
@@ -17,9 +15,6 @@ import DocsPage from "@/components/plimsoll/docs/DocsPage";
 import McpPage from "@/components/plimsoll/docs/McpPage";
 import SettingsPage from "@/components/plimsoll/docs/SettingsPage";
 import { getAccount, getTickers } from "@/lib/oregon";
-
-type Stage = "warning" | "loading" | "site";
-type Mode = "safe" | "glitch";
 
 interface ParsedRoute {
   path: string;
@@ -40,34 +35,33 @@ function parseHash(): ParsedRoute {
   return { path: "/" };
 }
 
+function motionReduced(): boolean {
+  try {
+    if (window.localStorage.getItem("plimsoll-safe-mode") === "1") return true;
+  } catch {
+    /* ignore */
+  }
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 export default function Page() {
-  const [stage, setStage] = useState<Stage>("warning");
-  const [mode, setMode] = useState<Mode>("glitch");
+  const [reduce, setReduce] = useState(false);
   const [route, setRoute] = useState<ParsedRoute>({ path: "/" });
   const [live, setLive] = useState(false);
   const [connected, setConnected] = useState(false);
 
-  const choose = useCallback((m: Mode) => {
-    setMode(m);
-    setStage("loading");
-  }, []);
-
-  // constitution settings can request safe mode permanently (persisted choice)
   useEffect(() => {
-    const id = window.setTimeout(() => {
-      try {
-        if (window.localStorage.getItem("plimsoll-safe-mode") === "1") {
-          setMode("safe");
-          setStage("site");
-        }
-      } catch {
-        /* storage unavailable — keep the standard gate */
-      }
-    }, 0);
-    return () => window.clearTimeout(id);
+    const apply = () => setReduce(motionReduced());
+    apply();
+    window.addEventListener("plimsoll-motion", apply);
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    mq.addEventListener("change", apply);
+    return () => {
+      window.removeEventListener("plimsoll-motion", apply);
+      mq.removeEventListener("change", apply);
+    };
   }, []);
 
-  // hash routing
   useEffect(() => {
     const onHash = () => {
       const next = parseHash();
@@ -84,18 +78,7 @@ export default function Page() {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  // lock scroll during warning / loading
   useEffect(() => {
-    if (stage === "site") return;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [stage]);
-
-  // single market poll for the header LIVE badge + account chip
-  useEffect(() => {
-    if (stage !== "site") return;
     let cancelled = false;
     const load = async () => {
       try {
@@ -111,16 +94,15 @@ export default function Page() {
         if (!cancelled) setConnected(false);
       }
     };
-    load();
+    void load();
     const id = setInterval(load, 30_000);
     return () => {
       cancelled = true;
       clearInterval(id);
     };
-  }, [stage]);
+  }, []);
 
-  const glitch = mode === "glitch" && stage === "site";
-
+  const glitch = !reduce;
   const activeNav =
     route.path === "/position"
       ? "/app"
@@ -128,42 +110,30 @@ export default function Page() {
 
   return (
     <div className="min-h-screen flex flex-col bg-plimsoll-deep">
-      <CustomCursor />
-
+      {glitch && <CustomCursor />}
+      <Header glitch={glitch} route={activeNav} live={live} connected={connected} />
+      <MarketStrip />
       <AnimatePresence mode="wait">
-        {stage === "warning" && <ExperienceWarning key="warning" onChoose={choose} />}
-        {stage === "loading" && (
-          <Preloader key="loading" glitch={mode === "glitch"} onComplete={() => setStage("site")} />
-        )}
+        <motion.div
+          key={route.path + (route.symbol ?? "")}
+          initial={reduce ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduce ? undefined : { opacity: 0, y: -10 }}
+          transition={{ duration: reduce ? 0 : 0.35, ease: [0.19, 1, 0.22, 1] }}
+          className="flex flex-col flex-1"
+        >
+          {route.path === "/" && <Landing glitch={glitch} />}
+          {route.path === "/app" && <Desk glitch={glitch} symbol={route.symbol} />}
+          {route.path === "/portfolio" && <Portfolio glitch={glitch} />}
+          {route.path === "/position" && route.symbol && <PositionDetail glitch={glitch} symbol={route.symbol} />}
+          {route.path === "/agents" && <AgentsGallery glitch={glitch} />}
+          {route.path === "/docs" && <DocsPage glitch={glitch} />}
+          {route.path === "/docs/mcp" && <McpPage glitch={glitch} />}
+          {route.path === "/settings" && <SettingsPage glitch={glitch} />}
+        </motion.div>
       </AnimatePresence>
-
-      {stage === "site" && (
-        <>
-          <Header glitch={glitch} route={activeNav} live={live} connected={connected} />
-          <MarketStrip />
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={route.path + (route.symbol ?? "")}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.35, ease: [0.19, 1, 0.22, 1] }}
-              className="flex flex-col flex-1"
-            >
-              {route.path === "/" && <Landing glitch={glitch} />}
-              {route.path === "/app" && <Desk glitch={glitch} symbol={route.symbol} />}
-              {route.path === "/portfolio" && <Portfolio glitch={glitch} />}
-              {route.path === "/position" && route.symbol && <PositionDetail glitch={glitch} symbol={route.symbol} />}
-              {route.path === "/agents" && <AgentsGallery glitch={glitch} />}
-              {route.path === "/docs" && <DocsPage glitch={glitch} />}
-              {route.path === "/docs/mcp" && <McpPage glitch={glitch} />}
-              {route.path === "/settings" && <SettingsPage glitch={glitch} />}
-            </motion.div>
-          </AnimatePresence>
-          <Footer glitch={glitch} />
-          {glitch && <div className="crt-overlay" aria-hidden />}
-        </>
-      )}
+      <Footer glitch={glitch} />
+      {glitch && <div className="crt-overlay" aria-hidden />}
     </div>
   );
 }

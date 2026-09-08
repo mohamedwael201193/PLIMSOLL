@@ -102,6 +102,21 @@ export default function Footer({ glitch }: Props) {
           </span>
           <span className="hidden lg:inline">OBSERVE → UNDERSTAND → PLAN → DECIDE → ASK → ACT → VERIFY → ADAPT</span>
           <span>BUILT WITH BINANCE AGENT OS · ©2026</span>
+          <button
+            type="button"
+            className="underline-offset-4 hover:underline"
+            onClick={() => {
+              try {
+                const next = window.localStorage.getItem("plimsoll-safe-mode") === "1" ? "0" : "1";
+                window.localStorage.setItem("plimsoll-safe-mode", next);
+                window.dispatchEvent(new Event("plimsoll-motion"));
+              } catch {
+                /* ignore */
+              }
+            }}
+          >
+            REDUCED MOTION
+          </button>
           <span>VERSION: 2.0.0-RC.1</span>
         </div>
       </div>

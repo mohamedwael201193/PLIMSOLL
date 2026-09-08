@@ -192,10 +192,13 @@ export default function Desk({ glitch, symbol }: Props) {
                 THE DESK
               </span>
             </h1>
+            <p className="mt-3 max-w-xl font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/60">
+              PLIMSOLL estimates how much exposure the market can support under your stated exit constraints — and keeps re-solving as conditions change.
+            </p>
           </div>
           <p className="font-code text-[9px] sm:text-[10px] tracking-[0.25em] text-plimsoll/50">
-            AN OPERATING INSTRUMENT FOR EXPOSURE
-            <span className="hidden sm:inline"> — DECLARE · RE-SOLVE · DECIDE</span>
+            SELECT · CONSTRAIN · ASK · APPROVE
+            <span className="hidden sm:inline"> — CONFIRM IS THE ONLY WRITE</span>
           </p>
         </div>
 
@@ -225,7 +228,7 @@ export default function Desk({ glitch, symbol }: Props) {
               loading={cap.loading}
               error={cap.error}
               stale={cap.stale}
-              footerNote="POST /v1/intent · YOUR CONSTITUTION PERSISTS LOCALLY"
+              footerNote="Oregon computes every capacity number. These constraints persist in this browser."
             />
 
             <CapacityChartCard history={hist.history} />

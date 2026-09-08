@@ -27,9 +27,6 @@ const CLIENT_CONFIG = `{
   "mcpServers": {
     "binance-agent-os": {
       "url": "https://agent.binance.com/mcp/agentic"
-    },
-    "plimsoll": {
-      "url": "https://plimsoll-oregon.onrender.com/mcp"
     }
   }
 }`;
@@ -47,7 +44,7 @@ const SECURITY_ROWS = [
   {
     icon: KeyRound,
     label: "OAUTH AT MCP BIND",
-    line: "CONNECT starts official Agent OS OAuth (CIMD + PKCE). Binance currently allowlists specific AI agents; this web client is refused (3346001) until they list PLIMSOLL. No static API key sits in the browser.",
+    line: "Binance currently requires a supported Agent client (Codex, Claude, Cursor, VS Code, ChatGPT) for Agent OS OAuth. This web CIMD client is refused (3346001). No static API key sits in the browser.",
   },
   {
     icon: UserCog,
@@ -173,8 +170,7 @@ export default function McpPage({ glitch }: Props) {
             MCP — <span className="text-outline-gold">MODEL CONTEXT PROTOCOL</span>
           </h1>
           <motion.p {...reveal(0.1)} className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/60 max-w-xl">
-            One connection to Binance Agent OS. Tools are discovered at runtime, reads are
-            separated from writes, and the single write path is gated behind your approval.
+            PLIMSOLL uses Binance Agent OS MCP for account access, approved execution, and order read-back. PLIMSOLL adds intent, constitution, estimated exit capacity, deterministic decision, approval, and continuous re-solve.
           </motion.p>
         </header>
 
@@ -186,8 +182,7 @@ export default function McpPage({ glitch }: Props) {
           <p className="mt-3 font-grotesk text-[13px] text-white/65 leading-relaxed">
             PLIMSOLL handles intent, constraints, capacity, policy, approval and re-solve. Binance Agent OS handles
             account access, market/account capabilities, approved execution and read-back. Official MCP: {MCP_ENDPOINT}.
-            Oregon also serves capacity MCP at https://plimsoll-oregon.onrender.com/mcp (no execute tool). Web CONNECT is
-            refused by Binance as unsupported agent 3346001 until they allowlist this CIMD client.
+            Web authorize is refused as unsupported agent 3346001 — use a supported Agent client.
           </p>
           {caps?.reason && (
             <p className="mt-3 font-code text-[10px] tracking-[0.12em] text-rose-300">{caps.reason}</p>

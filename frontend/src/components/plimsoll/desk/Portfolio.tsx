@@ -2,7 +2,7 @@
 
 /**
  * PORTFOLIO — Agentic account positions only.
- * Disconnected: CONNECT BINANCE. Never invents fills or mark values.
+ * Disconnected: NO CONNECTED ACCOUNT. Never invents fills or mark values.
  */
 
 import { useEffect, useState, type ReactNode } from "react";
@@ -112,6 +112,9 @@ export default function Portfolio({ glitch }: Props) {
               PORTFOLIO
             </span>
           </h1>
+          <p className="mt-3 max-w-xl font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/60">
+            PLIMSOLL estimates how much exposure the market can support under your stated exit constraints — then compares that line to a real Agentic account when one is bound.
+          </p>
           <p className="mt-3 font-code text-[10px] tracking-[0.3em] text-plimsoll/60">
             [ POSITIONS — CLASSIFICATION: {cls} ]
           </p>
