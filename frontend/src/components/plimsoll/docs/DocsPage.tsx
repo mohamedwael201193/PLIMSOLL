@@ -419,9 +419,10 @@ binding        = the constraint that produced the minimum`}
             <section id="mcp" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
               <SectionHead num="06" title="MCP" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
-                PLIMSOLL talks to the exchange through the Model Context Protocol. Tools are
-                discovered at runtime, reads and writes are separated, and the write path is gated
-                behind approval. One connection, seconds to set up.
+                Public estimated exit capacity uses official Binance Spot REST. Authenticated
+                account access, approved execution, and order read-back use Binance Agent OS MCP.
+                Tools are discovered at runtime, reads and writes are separated, and the write path
+                is gated behind approval.
               </p>
               <a
                 href="#/docs/mcp"
