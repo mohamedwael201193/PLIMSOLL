@@ -124,7 +124,7 @@ export default function LoadLine({ glitch }: Props) {
             {/* instrument header */}
             <div className="flex items-center justify-between px-4 sm:px-6 pt-4 font-code text-[9px] sm:text-[10px] tracking-[0.25em]">
               <span className="text-plimsoll/60">
-                DRAFT_INSTRUMENT · MK-07 · LINE {cls}
+                LOAD LINE · {cls}
                 {lineUsd == null ? "" : " · EXPOSURE ILLUSTRATION"}
               </span>
               <span

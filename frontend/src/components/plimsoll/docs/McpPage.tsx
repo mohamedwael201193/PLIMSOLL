@@ -33,11 +33,10 @@ const CLIENT_CONFIG = `{
 
 /** Verified capability categories — names are discovered at runtime, never hardcoded. */
 const READ_CAPS = [
-  { label: "SPOT MARKET DATA", line: "Depth, tickers and 24h volumes for spot pairs." },
-  { label: "ACCOUNT", line: "The agentic sub-account's own state." },
+  { label: "ACCOUNT", line: "The agentic sub-account's own state. Public capacity still uses official Spot REST, not this MCP read." },
   { label: "BALANCES", line: "What the sub-account actually holds." },
-  { label: "GET ORDER", line: "Order status read back from the exchange." },
-  { label: "OPEN ORDERS", line: "Currently resting orders." },
+  { label: "GET ORDER", line: "Order status read back from the exchange after an approved write." },
+  { label: "OPEN ORDERS", line: "Currently resting orders on the agentic account." },
 ];
 
 const SECURITY_ROWS = [
