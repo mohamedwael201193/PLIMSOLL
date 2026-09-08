@@ -103,7 +103,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "WHICH ASSETS DOES PLIMSOLL SUPPORT?",
-    a: "Works with currently tradable Spot symbols supported by the live Binance exchange metadata and their current trading filters. ARKUSDT is a validation pair, not the product's only asset. PLIMSOLL does not claim to support every Binance coin.",
+    a: "Works with currently tradable Binance Spot symbols supported by live Binance exchange metadata and their current trading filters. ARKUSDT is a validation pair, not the product's only asset. PLIMSOLL does not claim to support every Binance coin.",
   },
   {
     q: "DOES PLIMSOLL TRADE FOR ME?",

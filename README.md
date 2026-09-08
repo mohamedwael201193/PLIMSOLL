@@ -20,7 +20,7 @@ Participation defaults to **10% of ADV** and is always shown. It is a user-contr
 
 ## Asset support
 
-Works with currently tradable Spot symbols supported by the live Binance exchange metadata and their current trading filters. Lot size, step size, min notional, and tradability are read from live `exchangeInfo` at snapshot time. ARKUSDT is a validation pair used in tests and demos — not a hardcoded product universe. PLIMSOLL does not claim to support every Binance coin.
+Works with currently tradable Binance Spot symbols supported by live Binance exchange metadata and their current trading filters. Lot size, step size, min notional, and tradability are read from live `exchangeInfo` at snapshot time. ARKUSDT is a validation pair used in tests and demos — not a hardcoded product universe. PLIMSOLL does not claim to support every Binance coin.
 
 ## Agent loop
 
@@ -45,7 +45,7 @@ Every payload is labelled `LIVE`, `REPLAY`, `PAPER`, `TESTNET`, or `SIMULATED`. 
 
 Writes default to **off** (`WRITES_ENABLED=false`). `POST /v1/execute` is not authorization.
 
-Official Binance Agent OS OAuth (CIMD + PKCE) is implemented on Oregon. **TRY WEB AUTHORIZE** reaches `accounts.binance.com` Agentic Account Access. Chrome-verified on 2026-09-08: Binance refuses this CIMD web client as an unsupported AI agent (`3346001`). Supported launch clients are Claude, Claude Code, Codex, ChatGPT, Cursor, and VS Code. Oregon stays unbound. We do not impersonate those clients.
+Official Binance Agent OS OAuth (CIMD + PKCE) is implemented on Oregon. The public site does **not** send operators into that web authorize path: Binance refuses this CIMD web client as an unsupported AI agent (`3346001`). Use a currently supported Agent OS client. Oregon stays unbound. We do not impersonate those clients.
 
 Supported-agent path: add official MCP `https://agent.binance.com/mcp/agentic` in a supported client and complete Binance OAuth there. Public mode on the site still computes LIVE estimated exit capacity from official Spot REST. Private balances and execution require a real Agent OS bind.
 
@@ -166,7 +166,7 @@ Live UI: https://plimsoll-jade.vercel.app (`/`, `#/app`, `#/docs`, `#/docs/mcp`)
 1. Open the landing. No warning gate. The ARKUSDT strip is a **LIVE** Oregon ticker feed, not a mock.
 2. On `#/app`, choose a currently tradable Spot USDT pair (ARK remains a validation shortcut) and ask for a dollar size (try `$1000` then `$10000` with a one-day exit). Read estimated exit capacity, cost vs time, binding, utilization, and decision. Numbers come from `POST /v1/intent`.
 3. If the agent proposes a legal size, issue a snapshot-bound approval. That token is **not** a financial write.
-4. Settings shows **PUBLIC MODE** until a supported Agent OS client binds the Agentic account. **TRY WEB AUTHORIZE** reaches official Binance OAuth and currently returns unsupported-agent `3346001`.
+4. Settings and Portfolio show **PUBLIC MODE** until a supported Agent OS client binds the Agentic account. Primary CTA is **SUPPORTED AGENT DOCS**. The known-failing custom web OAuth path is not offered in product UX. `3346001` is documented on Docs / MCP / Settings only.
 5. A live order happens only after the operator types **`CONFIRM`** plus `WRITES_ENABLED=true`. Oregon `POST /v1/execution/prepare` checks live minNotional against the Agentic USDT balance first.
 6. `POST /v1/resolve` re-inverts a held position. Over-capacity → `TRIM_HELD`, never an automatic sell.
 

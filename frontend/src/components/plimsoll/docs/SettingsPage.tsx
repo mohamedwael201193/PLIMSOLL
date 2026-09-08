@@ -248,7 +248,7 @@ export default function SettingsPage({ glitch }: Props) {
         </header>
 
         <div className="mt-10">
-          <ConnectPanel account={account} />
+          <ConnectPanel account={account} surface="settings" />
         </div>
 
         <div className="mt-12 grid lg:grid-cols-[minmax(0,1fr)_400px] gap-6 items-start">

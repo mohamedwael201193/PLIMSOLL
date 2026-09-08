@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Lock } from "lucide-react";
 import { Corners } from "./desk/shared";
 import { focusGold } from "./landing/shared";
@@ -13,21 +12,21 @@ const MCP_ENDPOINT = "https://agent.binance.com/mcp/agentic";
 export function ConnectPanel({
   account,
   onRefresh,
+  surface = "product",
 }: {
   account: AccountState & { error: string | null; refresh: () => Promise<void> };
   onRefresh?: () => void;
+  surface?: "product" | "settings";
 }) {
-  const [authorizing, setAuthorizing] = useState(false);
   const kindLabel =
     account.accountKind === "SPOT_UNLABELLED"
       ? "AGENTIC ACCOUNT (SPOT — UNLABELLED BY MCP getAccount)"
       : account.accountKind === "NOT_CONNECTED"
         ? "PUBLIC MODE"
         : account.accountKind.replace(/_/g, " ");
-  const phase = authorizing ? "AUTHORIZING" : account.connected ? "AGENT CONNECTED" : "PUBLIC MODE";
+  const phase = account.connected ? "AGENT CONNECTED" : "PUBLIC MODE";
 
   const startOAuth = () => {
-    setAuthorizing(true);
     window.location.assign(oauthStartUrl(window.location.origin));
   };
 
@@ -48,13 +47,12 @@ export function ConnectPanel({
       <p className="mt-2 font-grotesk text-[13px] leading-relaxed text-white/65">
         {account.connected
           ? kindLabel
-          : "Public mode: live market data and estimated exit capacity. Private balances and execution stay off until a supported Binance Agent OS client authorizes the Agentic account."}
+          : "Live market analysis is available in Public Mode. Private account data and execution require a supported Agent OS connection."}
       </p>
-      {!account.connected && (
+      {surface === "settings" && !account.connected && (
         <p className="mt-3 font-grotesk text-[13px] leading-relaxed text-white/55">
-          Binance currently requires a supported Agent client for this Agent OS authorization flow.
-          Use Codex, Claude, Cursor, VS Code, ChatGPT, or another currently supported client. Do not
-          paste API secrets here.
+          Use a currently supported Binance Agent OS client. Do not paste API secrets here. Technical
+          connection limits are documented on Docs and MCP.
         </p>
       )}
 
@@ -125,22 +123,15 @@ export function ConnectPanel({
             SUPPORTED AGENT DOCS
           </a>
         )}
-        {!account.connected && (
-          <button
-            type="button"
-            onClick={startOAuth}
-            className={`tech-box-dark font-code text-[10px] sm:text-[11px] tracking-[0.2em] ${focusGold}`}
-          >
-            {authorizing ? "AUTHORIZING…" : "TRY WEB AUTHORIZE"}
-          </button>
-        )}
       </div>
 
       <div className="mt-4 border border-plimsoll/40 bg-plimsoll/10 p-3 flex items-start gap-2.5">
         <Lock className="w-4 h-4 text-plimsoll shrink-0 mt-0.5" strokeWidth={2} aria-hidden />
         <p className="font-grotesk text-[11px] leading-snug text-white/60">
-          Official MCP: {MCP_ENDPOINT}. TRY WEB AUTHORIZE reaches Binance OAuth; this CIMD web client
-          is currently refused (3346001). We do not impersonate Codex, Claude, Cursor, VS Code, or ChatGPT.
+          Official MCP: {MCP_ENDPOINT}.
+          {surface === "settings"
+            ? " This CIMD web client is currently refused (3346001). Use a supported Agent OS client. We do not impersonate Codex, Claude, Cursor, VS Code, or ChatGPT."
+            : " Connection and authorization limits are on Docs and MCP — not a fake account, and not a web login that Binance currently refuses."}
         </p>
       </div>
     </section>

@@ -180,7 +180,7 @@ export default function Portfolio({ glitch }: Props) {
         <p className="mt-3 font-code text-[9px] tracking-[0.12em] text-plimsoll/40 leading-relaxed">
           {connected
             ? "Empty execution history means none stored. The desk never invents fills."
-            : "Connect the Agentic Sub through official Agent OS. This page will not populate invented balances."}
+            : "Live market analysis is available in Public Mode. Private account data and execution require a supported Agent OS connection."}
         </p>
       </div>
     </main>

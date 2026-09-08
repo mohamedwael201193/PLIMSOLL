@@ -101,7 +101,7 @@ export default function SymbolPicker({ symbol, onSelect, compact }: Props) {
         </button>
       </form>
       <p className="mt-2 font-code text-[8px] tracking-[0.14em] text-white/30 leading-relaxed">
-        Works with currently tradable Spot symbols supported by the live Binance exchange metadata and their current trading filters.
+        Works with currently tradable Binance Spot symbols supported by live Binance exchange metadata and their current trading filters.
       </p>
     </div>
   );
