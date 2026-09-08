@@ -78,6 +78,7 @@ def _snap(symbol: str, replay: MarketSnapshot | None) -> MarketSnapshot:
             rest_base=settings.binance_rest_base,
             timeout_s=settings.http_timeout_s,
             classification="LIVE",
+            fallback_base=settings.binance_rest_fallback,
         )
     except MarketError as exc:
         raise HTTPException(

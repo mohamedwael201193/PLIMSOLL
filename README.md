@@ -30,7 +30,7 @@ Spine: **invert → legalize → approval → act → verify → re-invert**.
 
 - Backend: Python FastAPI (`backend/`)
 - Database: Supabase PostgreSQL (migrations via Alembic on `DIRECT_URL`; pooler URL at runtime with `pgbouncer` query stripped and prepared statements disabled)
-- Market data: official public Spot REST (`/api/v3/depth`, `/api/v3/ticker/24hr`, `/api/v3/exchangeInfo`)
+- Market data: official public Spot REST (`/api/v3/depth`, `/api/v3/ticker/24hr`, `/api/v3/exchangeInfo`). If `api.binance.com` returns 418/4xx from a cloud IP, the backend retries the official market-data host `https://data-api.binance.vision` (market data only; not trading).
 - Account / orders: official Agent OS MCP (`https://agent.binance.com/mcp/agentic`) after runtime tool discovery
 - Frontend: React + Vite — **not started until the production backend gates are green**
 - Browser talks only to this backend. No Binance secrets in the client.
@@ -77,6 +77,7 @@ Health: `GET /health`
 | `DATABASE_URL` | Postgres pooler URL (runtime) |
 | `DIRECT_URL` | Postgres direct URL (migrations) |
 | `BINANCE_REST_BASE` | Public REST origin |
+| `BINANCE_REST_FALLBACK` | Official market-data-only origin (`data-api.binance.vision`) |
 | `BINANCE_MCP_URL` | Official MCP endpoint |
 | `BINANCE_WS_BASE` | Public stream origin (reserved) |
 | `WRITES_ENABLED` | Must stay `false` until an operator enables writes |

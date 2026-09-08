@@ -27,6 +27,8 @@ services:
         value: "*"
       - key: BINANCE_REST_BASE
         value: https://api.binance.com
+      - key: BINANCE_REST_FALLBACK
+        value: https://data-api.binance.vision
       - key: BINANCE_MCP_URL
         value: https://agent.binance.com/mcp/agentic
       - key: BINANCE_WS_BASE

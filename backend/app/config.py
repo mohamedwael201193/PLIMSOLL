@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     database_url: str = ""
     direct_url: str = ""
     binance_rest_base: str = "https://api.binance.com"
+    binance_rest_fallback: str = "https://data-api.binance.vision"
     binance_mcp_url: str = "https://agent.binance.com/mcp/agentic"
     binance_ws_base: str = "wss://stream.binance.com:9443"
     writes_enabled: bool = False

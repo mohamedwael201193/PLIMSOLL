@@ -49,23 +49,61 @@ def fetch_snapshot(
     timeout_s: float,
     client: httpx.Client | None = None,
     classification: str = "LIVE",
+    fallback_base: str | None = None,
 ) -> MarketSnapshot:
     own = client is None
     client = client or httpx.Client(timeout=timeout_s)
+    bases = [rest_base.rstrip("/")]
+    if fallback_base:
+        fb = fallback_base.rstrip("/")
+        if fb and fb not in bases:
+            bases.append(fb)
+    last_error: MarketError | None = None
     try:
-        depth = _get_json(
-            client, f"{rest_base.rstrip('/')}/api/v3/depth", {"symbol": symbol, "limit": 500}
-        )
-        ticker = _get_json(
-            client, f"{rest_base.rstrip('/')}/api/v3/ticker/24hr", {"symbol": symbol}
-        )
-        info = _get_json(
-            client, f"{rest_base.rstrip('/')}/api/v3/exchangeInfo", {"symbol": symbol}
-        )
+        for i, base in enumerate(bases):
+            try:
+                return _fetch_one(
+                    client=client,
+                    symbol=symbol,
+                    rest_base=base,
+                    classification=classification,
+                )
+            except MarketError as exc:
+                last_error = exc
+                retryable = exc.error_class in {
+                    "IP_BANNED",
+                    "HTTP_ERROR",
+                    "CONNECTION_FAILURE",
+                    "TIMEOUT",
+                }
+                if retryable and i < len(bases) - 1:
+                    log.info(
+                        "market_fallback",
+                        extra={
+                            "error_class": exc.error_class,
+                            "phase": "OBSERVE",
+                            "classification": classification,
+                        },
+                    )
+                    continue
+                raise
+        assert last_error is not None
+        raise last_error
     finally:
         if own:
             client.close()
 
+
+def _fetch_one(
+    *,
+    client: httpx.Client,
+    symbol: str,
+    rest_base: str,
+    classification: str,
+) -> MarketSnapshot:
+    depth = _get_json(client, f"{rest_base}/api/v3/depth", {"symbol": symbol, "limit": 500})
+    ticker = _get_json(client, f"{rest_base}/api/v3/ticker/24hr", {"symbol": symbol})
+    info = _get_json(client, f"{rest_base}/api/v3/exchangeInfo", {"symbol": symbol})
     if not isinstance(depth, dict) or "bids" not in depth or "asks" not in depth:
         raise MarketError("MALFORMED_JSON", "depth missing bids/asks")
     if not isinstance(ticker, dict):
