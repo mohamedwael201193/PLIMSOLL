@@ -11,6 +11,15 @@ from app.core.hashing import sha256_hex, snapshot_material
 from app.core.schemas import MarketSnapshot
 from app.logutil import get_logger
 
+OFFICIAL_REST_ALTERNATES = (
+    "https://data-api.binance.vision",
+    "https://api1.binance.com",
+    "https://api2.binance.com",
+    "https://api3.binance.com",
+    "https://api4.binance.com",
+    "https://api-gcp.binance.com",
+)
+
 log = get_logger("market")
 
 
@@ -54,10 +63,13 @@ def fetch_snapshot(
     own = client is None
     client = client or httpx.Client(timeout=timeout_s)
     bases = [rest_base.rstrip("/")]
+    extras = []
     if fallback_base:
-        fb = fallback_base.rstrip("/")
-        if fb and fb not in bases:
-            bases.append(fb)
+        extras.append(fallback_base.rstrip("/"))
+    extras.extend(OFFICIAL_REST_ALTERNATES)
+    for extra in extras:
+        if extra and extra not in bases:
+            bases.append(extra)
     last_error: MarketError | None = None
     try:
         for i, base in enumerate(bases):

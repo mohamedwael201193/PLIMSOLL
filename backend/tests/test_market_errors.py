@@ -76,5 +76,11 @@ def test_timeout():
         raise httpx.TimeoutException("timeout")
     client = httpx.Client(transport=httpx.MockTransport(handler))
     with pytest.raises(MarketError) as exc:
-        fetch_snapshot(symbol="ARKUSDT", rest_base="https://api.binance.com", timeout_s=2, client=client)
+        fetch_snapshot(
+            symbol="ARKUSDT",
+            rest_base="https://api.binance.com",
+            timeout_s=2,
+            client=client,
+            fallback_base=None,
+        )
     assert exc.value.error_class == "TIMEOUT"
