@@ -284,6 +284,7 @@ def list_snapshots(symbol: str, request: Request, limit: int = 32) -> dict[str, 
         rows = (
             sess.query(SnapshotRow)
             .filter(SnapshotRow.symbol == symbol.upper())
+            .filter(SnapshotRow.classification == "LIVE")
             .order_by(SnapshotRow.captured_at.desc())
             .limit(cap)
             .all()
@@ -323,6 +324,7 @@ def list_fills(request: Request, limit: int = 20) -> dict[str, Any]:
                 "cumm_quote": str(row.cumm_quote),
             }
             for row in reversed(rows)
+            if row.order_id
         ]
         return {"fills": fills}
     finally:

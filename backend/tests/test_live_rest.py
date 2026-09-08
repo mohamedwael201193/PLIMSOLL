@@ -11,14 +11,15 @@ def test_live_public_rest_arkusdt_capacity():
     snap = fetch_snapshot(
         symbol="ARKUSDT",
         rest_base="https://api.binance.com",
-        timeout_s=10,
+        fallback_base="https://data-api.binance.vision",
+        timeout_s=15,
         classification="LIVE",
     )
     assert snap.classification == "LIVE"
     assert snap.symbol == "ARKUSDT"
     assert snap.snapshot_hash
     assert snap.captured_at
-    assert snap.source.startswith("https://api.binance.com")
+    assert snap.source.startswith("https://api.binance.com") or "data-api.binance.vision" in snap.source
     assert snap.filters.min_notional >= 0
     cap = estimate_exit_capacity(snap, Constitution())
     assert cap.classification == "LIVE"
