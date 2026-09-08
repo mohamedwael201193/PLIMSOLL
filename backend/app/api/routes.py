@@ -15,8 +15,9 @@ from app.agent.resolve import re_solve
 from app.config import get_settings
 from app.core.capacity import estimate_exit_capacity
 from app.core.schemas import Constitution, Decision, LegalOrder, MarketSnapshot, Position, utcnow
+from app.core.sizing import legalize_market
 from app.logutil import get_logger
-from app.rails.market import MarketError, fetch_snapshot
+from app.rails.market import MarketError, fetch_snapshot, fetch_tickers
 from app.rails.mcp import McpError, McpSession
 from app.state.db import ping
 from app.state.models import FillRow, SnapshotRow
@@ -90,6 +91,12 @@ class ResolveIn(BaseModel):
     constitution: Constitution = Field(default_factory=Constitution)
     position: Position | None = None
     replay: MarketSnapshot | None = None
+
+
+class PrepareIn(BaseModel):
+    symbol: str = "ARKUSDT"
+    replay: MarketSnapshot | None = None
+    quote_budget: str | None = None
 
 
 def _snap(symbol: str, replay: MarketSnapshot | None) -> MarketSnapshot:
@@ -456,6 +463,189 @@ def execute(
         "account_read_present": acct is not None,
         "account": acct,
         "partial": fill.partial,
+    }
+
+
+@router.post("/v1/execution/prepare")
+def prepare_execution(body: PrepareIn) -> dict[str, Any]:
+    """Smallest legal test order from live filters + MCP balance. Never invents a fill."""
+    snap = _snap(body.symbol.upper(), body.replay)
+    acct = account()
+    connected = bool(acct.get("connected"))
+    usdt_free = Decimal("0")
+    for row in acct.get("balances") or []:
+        if str(row.get("asset")) == "USDT":
+            usdt_free = Decimal(str(row.get("free") or "0"))
+            break
+    min_n = snap.filters.min_notional
+    wanted = Decimal(body.quote_budget) if body.quote_budget else min_n
+    if wanted < min_n:
+        wanted = min_n
+    spend = wanted
+    if connected and usdt_free < spend:
+        spend = usdt_free
+    order = legalize_market(
+        symbol=snap.symbol,
+        side="BUY",
+        quote_notional=spend,
+        ref_price=snap.last_price,
+        filters=snap.filters,
+    )
+    legal = order.notional > 0
+    unavailable_code = None
+    unavailable = None
+    if not connected:
+        legal = False
+        unavailable_code = acct.get("account_kind") or "NOT_CONNECTED"
+        unavailable = acct.get("reason") or "No connected Agentic account."
+    elif usdt_free <= 0:
+        legal = False
+        unavailable_code = "ZERO_BALANCE"
+        unavailable = "Account connected, but no funds are available."
+    elif not legal or usdt_free < min_n:
+        legal = False
+        unavailable_code = "INSUFFICIENT_BALANCE"
+        unavailable = "LIVE MICRO-EXECUTION UNAVAILABLE. INSUFFICIENT BALANCE FOR CURRENT MINIMUM NOTIONAL."
+    settings = get_settings()
+    return {
+        "classification": snap.classification,
+        "symbol": snap.symbol,
+        "connected": connected,
+        "account_kind": acct.get("account_kind"),
+        "agentic_note": acct.get("agentic_note"),
+        "can_trade": acct.get("can_trade"),
+        "usdt_free": str(usdt_free),
+        "last_price": str(snap.last_price),
+        "filters": {
+            "min_notional": str(snap.filters.min_notional),
+            "lot_min": str(snap.filters.lot_min),
+            "lot_step": str(snap.filters.lot_step),
+            "market_lot_min": str(snap.filters.market_lot_min),
+            "market_lot_step": str(snap.filters.market_lot_step),
+            "quote_asset": snap.filters.quote_asset,
+            "base_asset": snap.filters.base_asset,
+        },
+        "order": order.model_dump(mode="json") if order.notional > 0 else None,
+        "legal": legal,
+        "unavailable_code": unavailable_code,
+        "unavailable": unavailable,
+        "writes_enabled": settings.writes_enabled,
+        "kill_switch": settings.kill_switch,
+        "snapshot_hash": snap.snapshot_hash,
+        "captured_at": snap.captured_at.isoformat(),
+        "note": "Real funds will be used. No order is placed until the operator types CONFIRM.",
+    }
+
+
+@router.get("/v1/tickers")
+def tickers(symbols: str = "ARKUSDT,BTCUSDT,ETHUSDT,SOLUSDT,FETUSDT,BNBUSDT,DOGEUSDT") -> dict[str, Any]:
+    settings = get_settings()
+    wanted = [s.strip().upper() for s in symbols.split(",") if s.strip()][:12]
+    if not wanted:
+        raise HTTPException(status_code=400, detail={"error_class": "BAD_SYMBOLS"})
+    try:
+        body = fetch_tickers(
+            wanted,
+            rest_base=settings.binance_rest_base,
+            timeout_s=settings.http_timeout_s,
+            fallback_base=settings.binance_rest_fallback,
+            classification="LIVE",
+        )
+    except MarketError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error_class": exc.error_class, "classification": "UNKNOWN"},
+        ) from exc
+    return {**body, "captured_at": utcnow().isoformat()}
+
+
+def _nonzero_balances(payload: Any) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    bals = payload.get("balances") if isinstance(payload, dict) else None
+    if not isinstance(bals, list):
+        return rows
+    for row in bals:
+        if not isinstance(row, dict):
+            continue
+        asset = str(row.get("asset") or "")
+        if not asset:
+            continue
+        free = Decimal(str(row.get("free") or "0"))
+        locked = Decimal(str(row.get("locked") or "0"))
+        if free + locked <= 0:
+            continue
+        rows.append({"asset": asset, "free": str(free), "locked": str(locked)})
+    return rows
+
+
+@router.get("/v1/account")
+def account() -> dict[str, Any]:
+    settings = get_settings()
+    if not settings.binance_mcp_access_token:
+        return {
+            "connected": False,
+            "classification": "UNKNOWN",
+            "account_kind": "NOT_CONNECTED",
+            "reason": "No Agent OS MCP token on the Oregon server. Authorize official Agent OS in an MCP client mapped to the Agentic Sub, then the operator sets BINANCE_MCP_ACCESS_TOKEN server-side. The browser never receives that token.",
+            "writes_enabled": settings.writes_enabled,
+            "kill_switch": settings.kill_switch,
+        }
+    session = McpSession(settings.binance_mcp_url, settings.binance_mcp_access_token)
+    with httpx.Client(timeout=settings.http_timeout_s) as client:
+        try:
+            session.discover(client)
+        except McpError as exc:
+            return {
+                "connected": False,
+                "classification": "UNKNOWN",
+                "account_kind": "MCP_UNREACHABLE",
+                "reason": f"Agentic account could not be reached ({exc.error_class}).",
+                "writes_enabled": settings.writes_enabled,
+                "kill_switch": settings.kill_switch,
+            }
+        cap = session.capabilities.get("CAP_ACCOUNT")
+        if not cap:
+            return {
+                "connected": False,
+                "classification": "LIVE",
+                "account_kind": "MISSING_ACCOUNT_TOOL",
+                "reason": "MCP connected but no account-read tool was bound from the live tools/list.",
+                "bound": True,
+                "tool_count": len(session.tools),
+                "capabilities": session.capabilities,
+                "writes_enabled": settings.writes_enabled,
+                "kill_switch": settings.kill_switch,
+            }
+        try:
+            payload = session.call(client, cap, {"omitZeroBalances": True})
+        except McpError as exc:
+            return {
+                "connected": False,
+                "classification": "LIVE",
+                "account_kind": "ACCOUNT_READ_FAILED",
+                "reason": f"Account connected, but getAccount failed ({exc.error_class}).",
+                "bound": True,
+                "tool_count": len(session.tools),
+                "writes_enabled": settings.writes_enabled,
+                "kill_switch": settings.kill_switch,
+            }
+    data = payload.get("data") if isinstance(payload, dict) and isinstance(payload.get("data"), dict) else payload
+    if not isinstance(data, dict):
+        data = {}
+    balances = _nonzero_balances(data)
+    return {
+        "connected": True,
+        "classification": "LIVE",
+        "account_kind": "SPOT_UNLABELLED",
+        "agentic_note": "MCP getAccount reports SPOT and does not label Agentic vs master. Use the Agentic Sub created at MCP OAuth, not a Normal Sub.",
+        "account_type": data.get("accountType"),
+        "can_trade": data.get("canTrade"),
+        "balances": balances,
+        "bound": True,
+        "tool_count": len(session.tools),
+        "capabilities": session.capabilities,
+        "writes_enabled": settings.writes_enabled,
+        "kill_switch": settings.kill_switch,
     }
 
 

@@ -43,4 +43,4 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_API_BASE: https://plimsoll-oregon.onrender.com
+          NEXT_PUBLIC_API_BASE: https://plimsoll-oregon.onrender.com

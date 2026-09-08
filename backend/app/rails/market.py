@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from decimal import Decimal
+import json
 
 import httpx
 
@@ -159,3 +160,74 @@ def _fetch_one(
         },
     )
     return snap
+
+
+def fetch_tickers(
+    symbols: list[str],
+    *,
+    rest_base: str,
+    timeout_s: float,
+    fallback_base: str | None = None,
+    client: httpx.Client | None = None,
+    classification: str = "LIVE",
+) -> dict:
+    """Public 24h tickers only. Never invents prices; raises MarketError if every host fails."""
+    own = client is None
+    client = client or httpx.Client(timeout=timeout_s)
+    bases = [rest_base]
+    if fallback_base:
+        bases.append(fallback_base)
+    for b in OFFICIAL_REST_ALTERNATES:
+        if b not in bases:
+            bases.append(b)
+    last_error: MarketError | None = None
+    try:
+        for i, base in enumerate(bases):
+            try:
+                if len(symbols) == 1:
+                    raw = _get_json(client, f"{base}/api/v3/ticker/24hr", {"symbol": symbols[0]})
+                    rows = [raw] if isinstance(raw, dict) else []
+                else:
+                    raw = _get_json(
+                        client,
+                        f"{base}/api/v3/ticker/24hr",
+                        {"symbols": json.dumps(symbols, separators=(",", ":"))},
+                    )
+                    rows = raw if isinstance(raw, list) else []
+                out = []
+                for t in rows:
+                    if not isinstance(t, dict) or not t.get("symbol"):
+                        continue
+                    out.append(
+                        {
+                            "symbol": t["symbol"],
+                            "last": float(t.get("lastPrice") or 0),
+                            "change": float(t.get("priceChangePercent") or 0),
+                            "quoteVolume": float(t.get("quoteVolume") or 0),
+                            "high": float(t.get("highPrice") or 0),
+                            "low": float(t.get("lowPrice") or 0),
+                        }
+                    )
+                if not out:
+                    raise MarketError("MALFORMED_JSON", "empty ticker payload")
+                return {
+                    "classification": classification,
+                    "source": f"{base}/api/v3/ticker/24hr",
+                    "rows": out,
+                }
+            except MarketError as exc:
+                last_error = exc
+                retryable = exc.error_class in {
+                    "IP_BANNED",
+                    "HTTP_ERROR",
+                    "CONNECTION_FAILURE",
+                    "TIMEOUT",
+                }
+                if retryable and i < len(bases) - 1:
+                    continue
+                raise
+        assert last_error is not None
+        raise last_error
+    finally:
+        if own:
+            client.close()

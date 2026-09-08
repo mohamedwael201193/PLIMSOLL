@@ -85,10 +85,46 @@ def test_snapshots_without_db_is_empty():
     assert "LIVE" not in (body.get("note") or "")
 
 
+def test_account_not_connected():
+    r = client.get("/v1/account")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["connected"] is False
+    assert body["classification"] == "UNKNOWN"
+    assert body["account_kind"] == "NOT_CONNECTED"
+
+
+def test_tickers_live_or_classified_failure():
+    r = client.get("/v1/tickers", params={"symbols": "ARKUSDT"})
+    assert r.status_code in {200, 503}
+    if r.status_code == 200:
+        body = r.json()
+        assert body["classification"] == "LIVE"
+        assert body["rows"]
+        assert body["rows"][0]["symbol"] == "ARKUSDT"
+        assert "last" in body["rows"][0]
+
+
 def test_fills_without_db_is_empty():
     r = client.get("/v1/fills")
     assert r.status_code == 200
     assert r.json()["fills"] == []
+
+
+def test_prepare_replay_not_connected():
+    snap = snapshot(last="1.00")
+    r = client.post(
+        "/v1/execution/prepare",
+        json={"symbol": "ARKUSDT", "replay": snap.model_dump(mode="json")},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["classification"] == "REPLAY"
+    assert body["connected"] is False
+    assert body["legal"] is False
+    assert body["unavailable_code"] == "NOT_CONNECTED"
+    assert body["filters"]["min_notional"] == "5"
+    assert body["writes_enabled"] is False
 
 
 def test_execute_kill_switch_halted():

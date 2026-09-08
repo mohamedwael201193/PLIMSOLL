@@ -32,7 +32,7 @@ Spine: **invert → legalize → approval → act → verify → re-invert**.
 - Database: Supabase PostgreSQL (migrations via Alembic on `DIRECT_URL`; pooler URL at runtime with `pgbouncer` query stripped and prepared statements disabled)
 - Market data: official public Spot REST (`/api/v3/depth`, `/api/v3/ticker/24hr`, `/api/v3/exchangeInfo`). If `api.binance.com` returns 418/4xx from a cloud IP, the backend retries the official market-data host `https://data-api.binance.vision` (market data only; not trading).
 - Account / orders: official Agent OS MCP (`https://agent.binance.com/mcp/agentic`) after runtime tool discovery
-- Frontend: React + Vite. Browser talks **only** to this backend. No Binance secrets in the client.
+- Frontend: Next.js (App Router, hash routes). Browser talks **only** to this backend. No Binance secrets in the client. Visual system is the `front` design, connected to Oregon — not a redesign.
 
 Every payload is labelled `LIVE`, `REPLAY`, `PAPER`, `TESTNET`, or `SIMULATED`. Replay fixtures are tests, not product data.
 
@@ -72,7 +72,7 @@ npm test
 npm run dev
 ```
 
-`VITE_API_BASE` defaults to the Oregon Render URL. For local API: `VITE_API_BASE=http://127.0.0.1:10000`.
+`NEXT_PUBLIC_API_BASE` defaults to the Oregon Render URL. For local API: `NEXT_PUBLIC_API_BASE=http://127.0.0.1:10000`.
 
 Health: `GET /health`
 
@@ -120,10 +120,12 @@ Blueprint: `render.yaml` (secrets `sync: false`).
 Frontend (Vercel): https://plimsoll-jade.vercel.app
 
 - `/` landing
-- `/desk` operating desk (intent, capacity, charts, approval)
-- `/docs` Agent OS MCP connect + safety
+- `#/app` operating desk (intent, capacity, charts, approval, typed CONFIRM)
+- `#/portfolio` Agentic account positions (CONNECT BINANCE when disconnected)
+- `#/docs` product documentation
+- `#/docs/mcp` official Agent OS MCP
 
-The browser talks only to the Oregon API. Classification is whatever the backend returns (`LIVE` only when the snapshot is live). Charts use the classified book on the current snapshot, session observations, and stored snapshot last prices. Empty history is shown as empty.
+The browser talks only to the Oregon API. Classification is whatever the backend returns (`LIVE` only when the snapshot is live). Charts use session LIVE solves and stored LIVE snapshot hashes. Empty history is shown as empty. Disconnected portfolio does not invent balances.
 
 CI: GitHub Actions runs backend `pytest` and frontend `npm test` + `npm run build` on `main`.
 
@@ -143,16 +145,16 @@ CI: GitHub Actions runs backend `pytest` and frontend `npm test` + `npm run buil
 - Live financial writes are blocked until `CONFIRM`.
 - Free Render instances sleep; the first request after idle can take about a minute.
 - Some cloud egress IPs are banned by Binance (`HTTP 418`). Production market data uses official REST hosts from an Oregon instance.
-- Frontend: landing, desk, and Agent OS docs. The browser never holds Binance secrets.
+- Frontend: landing, desk, portfolio, agents, docs, MCP. The browser never holds Binance secrets.
 
 ## Demo
 
-Live UI: https://plimsoll-jade.vercel.app (`/`, `/desk`, `/docs`) against Oregon `https://plimsoll-oregon.onrender.com`.
+Live UI: https://plimsoll-jade.vercel.app (`/`, `#/app`, `#/docs`, `#/docs/mcp`) against Oregon `https://plimsoll-oregon.onrender.com`.
 
-1. Open the landing. The ARKUSDT strip is a **LIVE** Oregon snapshot, not a mock.
-2. On `/desk`, ask for a dollar size (try `$10000` of ARK with a one-day exit). Read `estimated_exit_capacity_notional`, cost vs time, and `binding`.
+1. Open the landing. The ARKUSDT strip is a **LIVE** Oregon ticker feed, not a mock.
+2. On `#/app`, ask for a dollar size (try `$1000` then `$10000` of ARK with a one-day exit). Read estimated exit capacity, cost vs time, and binding. Numbers come from `POST /v1/intent`.
 3. If the agent proposes a legal size, issue a snapshot-bound approval. That token is **not** a financial write.
-4. A live order happens only after operator `CONFIRM` plus `WRITES_ENABLED=true`.
+4. A live order happens only after the operator types **`CONFIRM`** plus `WRITES_ENABLED=true`. Oregon `POST /v1/execution/prepare` checks live minNotional against the Agentic USDT balance first.
 5. `POST /v1/resolve` re-inverts a held position. Over-capacity → `TRIM_HELD`, never an automatic sell.
 
 The desk does not invent fills. Empty execution history means none stored.

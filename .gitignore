@@ -22,3 +22,9 @@ __pycache__/
 .cursor/
 .agents/
 mcp-oauth-tokens.json
+.next/
+frontend/.next/
+frontend/db/
+frontend/tool-results/
+frontend/upload/
+frontend/.zscripts/
