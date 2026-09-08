@@ -83,13 +83,13 @@ export default function HiddenProblem({ glitch }: Props) {
               >
                 <Corners tone="dim" />
                 <div className="font-code text-[10px] tracking-[0.3em] text-white/45">
-                  MARK_VALUE
+                  ASKED · ARKUSDT · 1 DAY
                 </div>
                 <div className="font-display text-3xl sm:text-4xl mt-3 text-white/75">
                   {fmtUsdFull(markValue)}
                 </div>
                 <div className="font-code text-[9px] tracking-[0.2em] text-white/35 mt-3 leading-relaxed">
-                  PRICE × SIZE — WHAT THE SCREEN SAYS
+                  A STATED INTENT — NOT A CONNECTED ACCOUNT
                 </div>
               </motion.div>
 
@@ -99,7 +99,7 @@ export default function HiddenProblem({ glitch }: Props) {
               >
                 <Corners tone="gold" />
                 <div className="font-code text-[10px] tracking-[0.3em] text-plimsoll/80">
-                  EXIT_CAPACITY
+                  EXIT_CAPACITY · {cls}
                 </div>
                 <div className="font-display text-3xl sm:text-4xl mt-3 text-plimsoll drop-shadow-[0_0_22px_rgba(252,213,53,0.45)]">
                   {exitCapacity != null ? fmtUsdFull(exitCapacity) : "—"}

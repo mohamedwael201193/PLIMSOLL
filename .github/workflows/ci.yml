@@ -37,7 +37,9 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Install
-        run: npm ci
+        # npm ci rejects this lockfile on Node 22 (optional @emnapi versions).
+        # npm install is the verified install path for this Next.js tree.
+        run: npm install --no-audit --no-fund
       - name: Test
         run: npm test
       - name: Build

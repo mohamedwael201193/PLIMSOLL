@@ -259,6 +259,26 @@ export function ConstraintsPanel({
             onChange={(v) => onPatch({ [s.key]: v } as Partial<CapacityConstraints>)}
           />
         ))}
+        <div className="flex flex-wrap gap-2">
+          {[1000, 10_000].map((n) => {
+            const on = constraints.targetNotional === n;
+            return (
+              <button
+                key={n}
+                type="button"
+                onClick={() => onPatch({ targetNotional: n })}
+                aria-pressed={on}
+                className={`font-code text-[9px] tracking-[0.2em] border px-3 py-2 transition-colors ${
+                  on
+                    ? "border-plimsoll bg-plimsoll text-plimsoll-black"
+                    : "border-plimsoll/40 text-plimsoll hover:border-plimsoll hover:bg-plimsoll/10"
+                } ${focusGold}`}
+              >
+                ASK ${n.toLocaleString("en-US")}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="mt-6">

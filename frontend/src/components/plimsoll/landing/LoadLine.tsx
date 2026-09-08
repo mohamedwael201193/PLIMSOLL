@@ -3,17 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import { BIG_ENTITY } from "@/lib/agents";
-import { Corners, SectionLabel, reveal, BEZIER } from "./shared";
+import { DEFAULT_CONSTRAINTS } from "@/lib/capacity";
+import { intentText, postIntent } from "@/lib/oregon";
+import { Corners, SectionLabel, reveal, BEZIER, fmtUsdFull } from "./shared";
 
 interface Props {
   glitch: boolean;
 }
 
-/** Instrument scale: 0 – $8,000 of exposure. */
-const SCALE_MAX = 8000;
-const LINE_USD = 5200;
-const LINE_PCT = (LINE_USD / SCALE_MAX) * 100; // 65
-const EXPOSURES = [4300, 6100]; // cycles: within → over → within
+const ASKED = 10_000;
 
 const DRAFT_MARKS = [
   { label: "TF", at: 90 },
@@ -45,24 +43,50 @@ const CHIPS = [
 export default function LoadLine({ glitch }: Props) {
   const sectionRef = useRef<HTMLElement>(null);
   const [exposureIdx, setExposureIdx] = useState(0);
+  const [lineUsd, setLineUsd] = useState<number | null>(null);
+  const [cls, setCls] = useState("UNKNOWN");
 
-  // cycle exposure: the vessel takes on more, then trims back
   useEffect(() => {
-    const id = setInterval(() => setExposureIdx((i) => (i + 1) % EXPOSURES.length), 4200);
+    let alive = true;
+    postIntent(intentText({ ...DEFAULT_CONSTRAINTS, targetNotional: ASKED }), {
+      ...DEFAULT_CONSTRAINTS,
+      targetNotional: ASKED,
+    })
+      .then((r) => {
+        if (!alive) return;
+        setCls(r.mapped.classification);
+        setLineUsd(r.mapped.exitCapacity > 0 ? r.mapped.exitCapacity : null);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setCls("UNKNOWN");
+        setLineUsd(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => setExposureIdx((i) => (i + 1) % 2), 4200);
     return () => clearInterval(id);
   }, []);
 
-  // parallax on the entity beam
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start end", "end start"],
   });
   const entityY = useTransform(scrollYProgress, [0, 1], [70, -70]);
 
-  const exposureUsd = EXPOSURES[exposureIdx];
-  const exposurePct = (exposureUsd / SCALE_MAX) * 100;
-  const over = exposurePct > LINE_PCT;
-  const overPct = over ? exposurePct - LINE_PCT : 0;
+  const exposures = lineUsd != null ? [Math.max(0, Math.round(lineUsd * 0.82)), ASKED] : [0, 0];
+  const scaleMax = Math.max(8000, ASKED, lineUsd ?? 0);
+  const linePct = lineUsd != null ? (lineUsd / scaleMax) * 100 : 0;
+  const exposureUsd = exposures[exposureIdx];
+  const exposurePct = scaleMax > 0 ? (exposureUsd / scaleMax) * 100 : 0;
+  const over = lineUsd != null && exposurePct > linePct;
+  const overPct = over ? exposurePct - linePct : 0;
+  const instrumentStatus =
+    lineUsd == null ? "AWAITING LIVE LINE" : over ? "OVER CAPACITY" : "WITHIN CAPACITY";
 
   return (
     <section
@@ -99,7 +123,10 @@ export default function LoadLine({ glitch }: Props) {
 
             {/* instrument header */}
             <div className="flex items-center justify-between px-4 sm:px-6 pt-4 font-code text-[9px] sm:text-[10px] tracking-[0.25em]">
-              <span className="text-plimsoll/60">DRAFT_INSTRUMENT · MK-07</span>
+              <span className="text-plimsoll/60">
+                DRAFT_INSTRUMENT · MK-07 · LINE {cls}
+                {lineUsd == null ? "" : " · EXPOSURE ILLUSTRATION"}
+              </span>
               <span
                 className={`transition-colors duration-300 ${
                   over ? "text-rose-400" : "text-plimsoll"
@@ -109,7 +136,7 @@ export default function LoadLine({ glitch }: Props) {
                 <span className="blink" aria-hidden>
                   ◆
                 </span>{" "}
-                {over ? "OVER CAPACITY" : "WITHIN CAPACITY"}
+                {instrumentStatus}
               </span>
             </div>
 
@@ -156,7 +183,7 @@ export default function LoadLine({ glitch }: Props) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="absolute left-0 right-0 bg-[repeating-linear-gradient(135deg,transparent_0px,transparent_4px,rgba(255,92,92,0.35)_4px,rgba(255,92,92,0.35)_5px)]"
-                    style={{ bottom: `${LINE_PCT}%`, height: `${overPct}%` }}
+                    style={{ bottom: `${linePct}%`, height: `${overPct}%` }}
                   />
                 )}
               </div>
@@ -173,14 +200,14 @@ export default function LoadLine({ glitch }: Props) {
                   className="font-code text-[8px] sm:text-[9px] tracking-[0.18em] whitespace-nowrap px-1.5 py-0.5 bg-plimsoll-black/85 border border-white/20"
                   style={{ color: over ? "#FDA4AF" : "rgba(238,241,246,0.85)" }}
                 >
-                  CURRENT EXPOSURE ${exposureUsd.toLocaleString("en-US")}
+                  {exposureIdx === 1 ? "ASKED" : "WITHIN"} {fmtUsdFull(exposureUsd)}
                 </span>
               </motion.div>
 
               {/* the load line — drifts as the market moves */}
               <motion.div
                 className="absolute left-12 sm:left-14 right-0 flex items-center"
-                style={{ top: `${100 - LINE_PCT}%`, transform: "translateY(-50%)" }}
+                style={{ top: `${100 - linePct}%`, transform: "translateY(-50%)" }}
                 animate={{ x: [-10, 10, -10] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
               >
@@ -195,7 +222,7 @@ export default function LoadLine({ glitch }: Props) {
                   className="w-5 h-5 rounded-full border-2 border-plimsoll bg-plimsoll-black/60 shrink-0 -ml-3"
                 />
                 <span className="font-code text-[8px] sm:text-[9px] tracking-[0.18em] text-plimsoll whitespace-nowrap ml-2">
-                  LOAD LINE · ${LINE_USD.toLocaleString("en-US")}
+                  LOAD LINE · {lineUsd != null ? fmtUsdFull(lineUsd) : "—"}
                 </span>
               </motion.div>
             </div>
@@ -203,10 +230,10 @@ export default function LoadLine({ glitch }: Props) {
             {/* scale */}
             <div className="flex justify-between px-4 sm:px-6 pb-4 font-code text-[8px] sm:text-[9px] tracking-[0.15em] text-plimsoll/40">
               <span>$0</span>
-              <span>$2K</span>
-              <span>$4K</span>
-              <span>$6K</span>
-              <span>$8K</span>
+              <span>{fmtUsdFull(scaleMax * 0.25)}</span>
+              <span>{fmtUsdFull(scaleMax * 0.5)}</span>
+              <span>{fmtUsdFull(scaleMax * 0.75)}</span>
+              <span>{fmtUsdFull(scaleMax)}</span>
             </div>
           </motion.div>
 
