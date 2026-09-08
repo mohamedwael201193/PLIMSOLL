@@ -19,6 +19,7 @@ from app.logutil import get_logger
 from app.rails.market import MarketError, fetch_snapshot
 from app.rails.mcp import McpError, McpSession
 from app.state.db import ping
+from app.state.models import FillRow, SnapshotRow
 from app.state.snapshots import persist_snapshot
 import httpx
 
@@ -27,6 +28,30 @@ log = get_logger("api")
 _memory_approvals: dict[str, Any] = {}
 _last_capacity: dict[str, Decimal] = {}
 _positions: dict[str, Position] = {}
+BOOK_PREVIEW = 32
+
+
+def market_preview(snap: MarketSnapshot, n: int = BOOK_PREVIEW) -> dict[str, Any]:
+    """Classified live/replay book slice for charts. Never invents levels."""
+    return {
+        "symbol": snap.symbol,
+        "classification": snap.classification,
+        "source": snap.source,
+        "captured_at": snap.captured_at.isoformat(),
+        "last_price": str(snap.last_price),
+        "quote_volume_24h": str(snap.quote_volume_24h),
+        "best_bid": str(snap.bids[0].price) if snap.bids else None,
+        "best_ask": str(snap.asks[0].price) if snap.asks else None,
+        "bids": [{"price": str(lvl.price), "quantity": str(lvl.quantity)} for lvl in snap.bids[:n]],
+        "asks": [{"price": str(lvl.price), "quantity": str(lvl.quantity)} for lvl in snap.asks[:n]],
+        "filters": {
+            "min_notional": str(snap.filters.min_notional),
+            "lot_min": str(snap.filters.lot_min),
+            "lot_step": str(snap.filters.lot_step),
+            "base_asset": snap.filters.base_asset,
+            "quote_asset": snap.filters.quote_asset,
+        },
+    }
 
 
 class CapacityIn(BaseModel):
@@ -151,6 +176,7 @@ def capacity(body: CapacityIn, request: Request) -> dict[str, Any]:
         "captured_at": snap.captured_at.isoformat(),
         "source": snap.source,
         "capacity": cap.model_dump(mode="json"),
+        "market": market_preview(snap),
         "capacity_collapsed": collapsed,
         "held_notional": str(held) if held is not None else None,
         "over_capacity": over,
@@ -183,7 +209,10 @@ def intent(body: IntentIn, request: Request) -> dict[str, Any]:
     return {
         "classification": snap.classification,
         "snapshot_hash": snap.snapshot_hash,
+        "captured_at": snap.captured_at.isoformat(),
+        "source": snap.source,
         "decision": decision.model_dump(mode="json"),
+        "market": market_preview(snap),
     }
 
 
@@ -219,10 +248,85 @@ def resolve(body: ResolveIn, request: Request) -> dict[str, Any]:
     return {
         "classification": snap.classification,
         "snapshot_hash": snap.snapshot_hash,
+        "captured_at": snap.captured_at.isoformat(),
+        "source": snap.source,
         "capacity_collapsed": collapsed,
         "decision": decision.model_dump(mode="json"),
+        "market": market_preview(snap),
         "language": "estimated exit capacity under stated constraints",
     }
+
+
+@router.get("/v1/market/{symbol}")
+def get_market(symbol: str, request: Request) -> dict[str, Any]:
+    snap = _snap(symbol.upper(), None)
+    _persist(request, snap)
+    return {
+        "classification": snap.classification,
+        "snapshot_hash": snap.snapshot_hash,
+        "market": market_preview(snap),
+        "language": "estimated exit capacity under stated constraints",
+    }
+
+
+@router.get("/v1/snapshots/{symbol}")
+def list_snapshots(symbol: str, request: Request, limit: int = 32) -> dict[str, Any]:
+    factory = getattr(request.app.state, "db_session", None)
+    if factory is None:
+        return {
+            "symbol": symbol.upper(),
+            "observations": [],
+            "note": "database not attached this process",
+        }
+    cap = max(1, min(int(limit), 64))
+    sess = factory()
+    try:
+        rows = (
+            sess.query(SnapshotRow)
+            .filter(SnapshotRow.symbol == symbol.upper())
+            .order_by(SnapshotRow.captured_at.desc())
+            .limit(cap)
+            .all()
+        )
+        observations = []
+        for row in reversed(rows):
+            ticker = row.ticker or {}
+            observations.append(
+                {
+                    "captured_at": row.captured_at.isoformat() if row.captured_at else None,
+                    "classification": row.classification,
+                    "last_price": ticker.get("lastPrice"),
+                    "quote_volume_24h": ticker.get("quoteVolume"),
+                    "snapshot_hash": row.hash,
+                }
+            )
+        return {"symbol": symbol.upper(), "observations": observations}
+    finally:
+        sess.close()
+
+
+@router.get("/v1/fills")
+def list_fills(request: Request, limit: int = 20) -> dict[str, Any]:
+    factory = getattr(request.app.state, "db_session", None)
+    if factory is None:
+        return {"fills": [], "note": "database not attached this process"}
+    cap = max(1, min(int(limit), 50))
+    sess = factory()
+    try:
+        rows = sess.query(FillRow).order_by(FillRow.id.desc()).limit(cap).all()
+        fills = [
+            {
+                "client_order_id": row.client_order_id,
+                "order_id": row.order_id,
+                "status": row.status,
+                "executed_qty": str(row.executed_qty),
+                "cumm_quote": str(row.cumm_quote),
+            }
+            for row in reversed(rows)
+        ]
+        return {"fills": fills}
+    finally:
+        sess.close()
 
 
 @router.get("/v1/positions/{symbol}")

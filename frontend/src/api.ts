@@ -19,7 +19,14 @@ export async function getHealth() {
   const res = await fetch(`${API_BASE}/health`);
   const body = await parse(res);
   if (!res.ok) throw new Error("health failed");
-  return body as { ok: boolean; writes_enabled: boolean; kill_switch: boolean; app: string };
+  return body as { ok: boolean; writes_enabled: boolean; kill_switch: boolean; app: string; time?: string };
+}
+
+export async function getReady() {
+  const res = await fetch(`${API_BASE}/ready`);
+  const body = await parse(res);
+  if (!res.ok) throw new Error("ready failed");
+  return body as { ok: boolean; database: string };
 }
 
 export async function postCapacity(symbol: string, constitution: Record<string, unknown>, position?: { symbol: string; base_qty: string }) {
@@ -64,4 +71,44 @@ export async function postApproval(decision: unknown) {
   const body = await parse(res);
   if (!res.ok) throw new Error(`approval ${res.status}`);
   return body;
+}
+
+export async function getMarket(symbol: string) {
+  const res = await fetch(`${API_BASE}/v1/market/${encodeURIComponent(symbol)}`);
+  const body = await parse(res);
+  if (!res.ok) throw new Error(body?.detail?.error_class || `market ${res.status}`);
+  return { ...body, classification: classificationLabel(body.classification) as Classification };
+}
+
+export async function getSnapshots(symbol: string) {
+  const res = await fetch(`${API_BASE}/v1/snapshots/${encodeURIComponent(symbol)}`);
+  const body = await parse(res);
+  if (!res.ok) throw new Error(`snapshots ${res.status}`);
+  return body as {
+    symbol: string;
+    observations: Array<{
+      captured_at: string | null;
+      classification: string;
+      last_price?: string;
+      quote_volume_24h?: string;
+      snapshot_hash?: string;
+    }>;
+    note?: string;
+  };
+}
+
+export async function getFills() {
+  const res = await fetch(`${API_BASE}/v1/fills`);
+  const body = await parse(res);
+  if (!res.ok) throw new Error(`fills ${res.status}`);
+  return body as {
+    fills: Array<{
+      client_order_id: string;
+      order_id: string | null;
+      status: string;
+      executed_qty: string;
+      cumm_quote: string;
+    }>;
+    note?: string;
+  };
 }

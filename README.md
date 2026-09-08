@@ -118,7 +118,15 @@ Render **free** web service in **Oregon** (`https://plimsoll-oregon.onrender.com
 
 Blueprint: `render.yaml` (secrets `sync: false`).
 
-Frontend (Vercel): https://plimsoll-jade.vercel.app — browser talks only to the Oregon API. Classification is whatever the backend returns (`LIVE` only when the snapshot is live).
+Frontend (Vercel): https://plimsoll-jade.vercel.app
+
+- `/` landing
+- `/desk` operating desk (intent, capacity, charts, approval)
+- `/docs` Agent OS MCP connect + safety
+
+The browser talks only to the Oregon API. Classification is whatever the backend returns (`LIVE` only when the snapshot is live). Charts use the classified book on the current snapshot, session observations, and stored snapshot last prices. Empty history is shown as empty.
+
+CI: GitHub Actions runs backend `pytest` and frontend `npm test` + `npm run build` on `main`.
 
 ## Safety
 
@@ -136,7 +144,7 @@ Frontend (Vercel): https://plimsoll-jade.vercel.app — browser talks only to th
 - Live financial writes are blocked until `CONFIRM`.
 - Free Render instances sleep; the first request after idle can take about a minute.
 - Some cloud egress IPs are banned by Binance (`HTTP 418`). Production market data uses official REST hosts from an Oregon instance.
-- Frontend is a single intent → capacity → approval screen. It does not talk to Binance.
+- Frontend: landing, desk, and Agent OS docs. The browser never holds Binance secrets.
 
 ## Demo
 

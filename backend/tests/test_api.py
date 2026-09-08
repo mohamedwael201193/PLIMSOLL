@@ -32,6 +32,10 @@ def test_capacity_replay_labelled():
     assert "estimated_exit_capacity_notional" in cap
     assert "cost_capacity_notional" in cap
     assert "time_capacity_notional" in cap
+    market = body["market"]
+    assert market["classification"] == "REPLAY"
+    assert market["bids"]
+    assert market["last_price"]
 
 
 def test_intent_asks_on_unknown_symbol():
@@ -67,4 +71,21 @@ def test_resolve_replay():
         },
     )
     assert r.status_code == 200
-    assert r.json()["classification"] == "REPLAY"
+    body = r.json()
+    assert body["classification"] == "REPLAY"
+    assert body["market"]["classification"] == "REPLAY"
+    assert "bids" in body["market"]
+
+
+def test_snapshots_without_db_is_empty():
+    r = client.get("/v1/snapshots/ARKUSDT")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["observations"] == []
+    assert "LIVE" not in (body.get("note") or "")
+
+
+def test_fills_without_db_is_empty():
+    r = client.get("/v1/fills")
+    assert r.status_code == 200
+    assert r.json()["fills"] == []
