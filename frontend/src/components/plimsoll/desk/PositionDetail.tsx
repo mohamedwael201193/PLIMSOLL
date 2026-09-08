@@ -190,7 +190,7 @@ function PositionConsole({ glitch, asset }: { glitch: boolean; asset: AssetInfo 
             <ConstraintsPanel
               constraints={cap.constraints}
               onPatch={cap.patch}
-              onCompute={() => void cap.compute()}
+              onCompute={(override) => void cap.compute(override)}
               loading={cap.loading}
               error={cap.error}
               stale={cap.stale}
