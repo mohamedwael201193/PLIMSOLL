@@ -32,7 +32,7 @@ Spine: **invert → legalize → approval → act → verify → re-invert**.
 - Database: Supabase PostgreSQL (migrations via Alembic on `DIRECT_URL`; pooler URL at runtime with `pgbouncer` query stripped and prepared statements disabled)
 - Market data: official public Spot REST (`/api/v3/depth`, `/api/v3/ticker/24hr`, `/api/v3/exchangeInfo`). If `api.binance.com` returns 418/4xx from a cloud IP, the backend retries the official market-data host `https://data-api.binance.vision` (market data only; not trading).
 - Account / orders: official Agent OS MCP (`https://agent.binance.com/mcp/agentic`) after runtime tool discovery
-- Frontend: React + Vite — **not started until the production backend gates are green**
+- Frontend: React + Vite. Browser talks **only** to this backend. No Binance secrets in the client.
 - Browser talks only to this backend. No Binance secrets in the client.
 
 Every payload is labelled `LIVE`, `REPLAY`, `PAPER`, `TESTNET`, or `SIMULATED`. Replay fixtures are tests, not product data.
@@ -64,6 +64,17 @@ python -m pytest -q
 python -m uvicorn app.main:app --host 0.0.0.0 --port 10000
 ```
 
+Frontend (talks only to the backend):
+
+```powershell
+cd frontend
+npm install
+npm test
+npm run dev
+```
+
+`VITE_API_BASE` defaults to the Oregon Render URL. For local API: `VITE_API_BASE=http://127.0.0.1:10000`.
+
 Health: `GET /health`
 
 ## Environment variable names
@@ -90,13 +101,15 @@ Health: `GET /health`
 ```powershell
 cd backend
 python -m pytest -q
+cd ..\frontend
+npm test
 ```
 
 Includes REPLAY books, property checks, HTTP 429/418 classes, approval expiry, duplicate `clientOrderId` suppression, isolated-schema Alembic, and one **LIVE** public REST snapshot for `ARKUSDT` (no hardcoded prices).
 
 ## Deployment
 
-Render **free** web service (spins down after ~15 minutes idle; 750 instance hours/month). Do not attach a paid plan unless you explicitly choose to spend.
+Render **free** web service in **Oregon** (`https://plimsoll-oregon.onrender.com`). Frankfurt Render IPs received HTTP 418 from Binance public REST; Oregon reaches official `data-api.binance.vision`. Free instances sleep after ~15 minutes idle (750 hours/month). Do not attach a paid plan unless you explicitly choose to spend.
 
 - Build: `pip install -r backend/requirements.txt`
 - Start: `cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
@@ -120,7 +133,8 @@ Blueprint: `render.yaml` (secrets `sync: false`).
 - MCP `getAccount` does not label Agentic vs master. The operator must use the Agentic virtual sub-account created at MCP OAuth, not a Normal Sub.
 - Live financial writes are blocked until `CONFIRM`.
 - Free Render instances sleep; the first request after idle can take about a minute.
-- Frontend is last and is not in this tree until production backend verification is green.
+- Some cloud egress IPs are banned by Binance (`HTTP 418`). Production market data uses official REST hosts from an Oregon instance.
+- Frontend is a single intent → capacity → approval screen. It does not talk to Binance.
 
 ## Demo
 

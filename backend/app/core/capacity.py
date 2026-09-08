@@ -100,6 +100,7 @@ def estimate_exit_capacity(
         "exit_side": "SELL_INTO_BIDS",
         "language": "estimated exit capacity under stated constraints",
         "not": ["maximum safe size", "guaranteed exit", "guaranteed liquidity"],
+        "falling_threshold": "Refuse additional exposure only if estimated exit capacity drops more than 5% versus the prior observation.",
     }
     return CapacityResult(
         symbol=snapshot.symbol,

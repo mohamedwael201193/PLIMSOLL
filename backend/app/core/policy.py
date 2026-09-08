@@ -55,11 +55,14 @@ def decide(
 
     over = bool(held_notional is not None and held_notional > cap.estimated_exit_capacity_notional)
 
-    falling = (
+    falling = False
+    if (
         constitution.never_increase_if_capacity_falling
         and previous_capacity is not None
-        and cap.estimated_exit_capacity_notional < previous_capacity
-    )
+        and previous_capacity > 0
+    ):
+        # Book jitter is not a liquidity collapse. Require a 5% drop.
+        falling = cap.estimated_exit_capacity_notional < (previous_capacity * Decimal("0.95"))
 
     requested = intent.target_notional
     if requested is None and not over:

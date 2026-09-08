@@ -51,6 +51,29 @@ def test_intent_do_not_increase_if_falling():
     assert d.action.value == "REFUSE"
 
 
+def test_sub_five_percent_capacity_tick_does_not_refuse_add():
+    from app.core.capacity import estimate_exit_capacity
+    from app.core.policy import decide
+    from app.core.schemas import Intent
+
+    snap = snapshot(quote_volume="1000000")
+    cap = estimate_exit_capacity(snap, CONST)
+    prev = cap.estimated_exit_capacity_notional * Decimal("1.02")
+    d = decide(
+        intent=Intent(
+            raw_text="Buy $10 of ARKUSDT",
+            symbol="ARKUSDT",
+            target_notional=Decimal("10"),
+            side_hint="BUY",
+        ),
+        snapshot=snap,
+        constitution=CONST,
+        previous_capacity=prev,
+    )
+    assert d.action.value != "REFUSE" or "falling" not in d.reason.lower()
+    assert "falling" not in d.reason.lower()
+
+
 def test_unknown_symbol_x_asks():
     d = run_once(
         text="Buy $500 of X but don't exceed 50 bps exit cost.",
