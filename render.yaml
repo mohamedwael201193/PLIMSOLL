@@ -1,0 +1,37 @@
+# PLIMSOLL
+# Estimated exit capacity under stated constraints. Free instance. Do not spend.
+# Secrets stay in the Render dashboard (sync: false). Never put tokens here.
+
+services:
+  - type: web
+    name: plimsoll-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    preDeployCommand: cd backend && alembic upgrade head
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: APP_NAME
+        value: PLIMSOLL
+      - key: NODE_ENV
+        value: production
+      - key: WRITES_ENABLED
+        value: "false"
+      - key: KILL_SWITCH
+        value: "false"
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: BINANCE_REST_BASE
+        value: https://api.binance.com
+      - key: BINANCE_MCP_URL
+        value: https://agent.binance.com/mcp/agentic
+      - key: BINANCE_WS_BASE
+        value: wss://stream.binance.com:9443
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
