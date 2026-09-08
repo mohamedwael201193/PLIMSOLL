@@ -83,3 +83,15 @@ describe("oauthStartUrl", () => {
     expect(url.toLowerCase()).not.toContain("token");
   });
 });
+
+describe("spot symbol helpers", () => {
+  it("normalizes typed bases into USDT pairs", async () => {
+    const { normalizeSpotSymbol, isSpotUsdtSymbol, assetFromSymbol } = await import("./capacity");
+    expect(normalizeSpotSymbol("sol")).toBe("SOLUSDT");
+    expect(normalizeSpotSymbol("BTCUSDT")).toBe("BTCUSDT");
+    expect(isSpotUsdtSymbol("ARKUSDT")).toBe(true);
+    expect(isSpotUsdtSymbol("ARK")).toBe(false);
+    expect(assetFromSymbol("FETUSDT")?.base).toBe("FET");
+    expect(assetFromSymbol("ADAUSDT")?.symbol).toBe("ADAUSDT");
+  });
+});

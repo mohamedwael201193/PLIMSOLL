@@ -33,8 +33,7 @@ const fmtVol = (n: number): string => {
 };
 
 /**
- * LIVE/SIMULATED market strip — a nod to the real Plimsoll desk:
- * the ARKUSDT strip is a live snapshot, never a mock pretending to be live.
+ * Public ticker strip. Classification comes from Oregon only.
  */
 export default function MarketStrip() {
   const [data, setData] = useState<MarketData | null>(null);

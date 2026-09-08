@@ -11,7 +11,7 @@ const LINES: Array<{ prefix: string; body: string[]; accent?: boolean }> = [
   { prefix: "plimsoll@desk:~$ ", body: ["plimsoll capacity --symbol ARKUSDT"] },
   { prefix: "> ", body: ["POST /v1/intent ", "→ ", "LIVE | UNKNOWN"], accent: true },
   { prefix: "> ", body: ["depth: ", "1000 levels · walked deterministically"] },
-  { prefix: "> ", body: ["filters: ", "LOT_SIZE / MARKET_LOT_SIZE / NOTIONAL"] },
+  { prefix: "> ", body: ["filters: ", "live exchangeInfo LOT_SIZE / MARKET_LOT_SIZE / NOTIONAL"] },
   { prefix: "> ", body: ["payload labels: ", "LIVE | REPLAY | PAPER | SIMULATED"], accent: true },
   { prefix: "> ", body: ["partial fills: ", "NOT success"] },
   { prefix: "> ", body: ["stale snapshots: ", "REFUSE ACTION"], accent: true },
@@ -20,7 +20,7 @@ const LINES: Array<{ prefix: string; body: string[]; accent?: boolean }> = [
 const STATS = [
   {
     title: "DETERMINISTIC MATH",
-    line: "The same book and the same constraints always produce the same capacity. No randomness in the numbers that matter.",
+    line: "The same book and the same constraints always produce the same capacity. Filters and tradability come from live exchange metadata, not a hardcoded coin list.",
   },
   {
     title: "LABELLED PAYLOADS",

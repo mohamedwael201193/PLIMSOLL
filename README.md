@@ -18,6 +18,10 @@ Invert the question: given a live book, 24h quote volume, fees, and the user’s
 
 Participation defaults to **10% of ADV** and is always shown. It is a user-controlled assumption, not a hidden constant.
 
+## Asset support
+
+Works with currently tradable Spot symbols supported by the live Binance exchange metadata and their current trading filters. Lot size, step size, min notional, and tradability are read from live `exchangeInfo` at snapshot time. ARKUSDT is a validation pair used in tests and demos — not a hardcoded product universe. PLIMSOLL does not claim to support every Binance coin.
+
 ## Agent loop
 
 `OBSERVE → UNDERSTAND → PLAN → DECIDE → ASK → ACT → VERIFY → ADAPT`
@@ -110,7 +114,7 @@ cd ..\frontend
 npm test
 ```
 
-Includes REPLAY books, property checks, HTTP 429/418 classes, MCP timeout / missing tool / schema-change fail-closed, kill-switch halt, approval expiry, duplicate `clientOrderId` suppression, isolated-schema Alembic, and one **LIVE** public REST snapshot for `ARKUSDT` (no hardcoded prices).
+Includes REPLAY books, property checks, HTTP 429/418 classes, MCP timeout / missing tool / schema-change fail-closed, kill-switch halt, approval expiry, duplicate `clientOrderId` suppression, isolated-schema Alembic, one **LIVE** public REST snapshot for `ARKUSDT` (no hardcoded prices), live `GET /v1/symbols` when the host is reachable, and symbol-agnostic filter/sizing fixtures.
 
 ## Deployment
 
@@ -159,7 +163,7 @@ CI: GitHub Actions runs backend `pytest` and frontend `npm test` + `npm run buil
 Live UI: https://plimsoll-jade.vercel.app (`/`, `#/app`, `#/docs`, `#/docs/mcp`) against Oregon `https://plimsoll-oregon.onrender.com`.
 
 1. Open the landing. No warning gate. The ARKUSDT strip is a **LIVE** Oregon ticker feed, not a mock.
-2. On `#/app`, ask for a dollar size (try `$1000` then `$10000` of ARK with a one-day exit). Read estimated exit capacity, cost vs time, and binding. Numbers come from `POST /v1/intent`.
+2. On `#/app`, choose a currently tradable Spot USDT pair (ARK remains a validation shortcut) and ask for a dollar size (try `$1000` then `$10000` with a one-day exit). Read estimated exit capacity, cost vs time, binding, utilization, and decision. Numbers come from `POST /v1/intent`.
 3. If the agent proposes a legal size, issue a snapshot-bound approval. That token is **not** a financial write.
 4. Settings shows **PUBLIC MODE** until a supported Agent OS client binds the Agentic account. **TRY WEB AUTHORIZE** reaches official Binance OAuth and currently returns unsupported-agent `3346001`.
 5. A live order happens only after the operator types **`CONFIRM`** plus `WRITES_ENABLED=true`. Oregon `POST /v1/execution/prepare` checks live minNotional against the Agentic USDT balance first.

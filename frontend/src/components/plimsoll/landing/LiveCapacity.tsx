@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus } from "lucide-react";
-import { ASSETS, DEFAULT_CONSTRAINTS, type CapacityConstraints, type CapacityResult } from "@/lib/capacity";
+import { DEFAULT_CONSTRAINTS, type CapacityConstraints, type CapacityResult } from "@/lib/capacity";
 import { intentText, postIntent } from "@/lib/oregon";
 import { Corners, SectionLabel, focusGold, reveal, BEZIER, fmtUsdFull } from "./shared";
+import SymbolPicker from "../SymbolPicker";
 
 interface Props {
   glitch: boolean;
@@ -143,34 +144,15 @@ export default function LiveCapacity({ glitch }: Props) {
             <Corners tone="gold" />
             <div className="flex items-center justify-between font-code text-[10px] sm:text-[11px] tracking-[0.3em]">
               <span className="text-plimsoll">CONSTRAINTS</span>
-              <span className="text-white/30">SPEC/07</span>
+              <span className="text-white/30">DECLARE THEN ASK</span>
             </div>
 
-            {/* symbol selector */}
-            <div className="mt-5" role="group" aria-label="Symbol">
-              <div className="font-code text-[9px] tracking-[0.25em] text-white/40 mb-2">SYMBOL</div>
-              <div className="grid grid-cols-7 gap-1">
-                {ASSETS.map((a) => {
-                  const selected = constraints.symbol === a.symbol;
-                  return (
-                    <button
-                      key={a.symbol}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => set({ symbol: a.symbol })}
-                      className={`flex flex-col items-center gap-1 py-2 border transition-colors ${
-                        selected
-                          ? "border-plimsoll bg-plimsoll/15 text-plimsoll"
-                          : "border-white/10 text-white/45 hover:border-plimsoll/50 hover:text-plimsoll/80"
-                      } ${focusGold}`}
-                      aria-label={`Select ${a.symbol}`}
-                    >
-                      <img src={a.icon} alt="" className="w-4 h-4" draggable={false} loading="lazy" />
-                      <span className="font-code text-[8px] tracking-[0.08em]">{a.base}</span>
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="mt-5">
+              <SymbolPicker
+                compact
+                symbol={constraints.symbol}
+                onSelect={(s) => set({ symbol: s })}
+              />
             </div>
 
             {/* steppers */}

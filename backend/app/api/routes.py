@@ -17,7 +17,7 @@ from app.core.capacity import estimate_exit_capacity
 from app.core.schemas import Constitution, Decision, LegalOrder, MarketSnapshot, Position, utcnow
 from app.core.sizing import legalize_market
 from app.logutil import get_logger
-from app.rails.market import MarketError, fetch_snapshot, fetch_tickers
+from app.rails.market import MarketError, fetch_snapshot, fetch_spot_universe, fetch_tickers
 from app.rails.mcp import McpError, McpSession
 from app.rails.oauth import (
     NOT_CONNECTED_REASON,
@@ -124,7 +124,7 @@ def _snap(symbol: str, replay: MarketSnapshot | None) -> MarketSnapshot:
     except MarketError as exc:
         raise HTTPException(
             status_code=503,
-            detail={"error_class": exc.error_class, "classification": "LIVE"},
+            detail={"error_class": exc.error_class, "classification": "UNKNOWN"},
         ) from exc
 
 
@@ -569,6 +569,23 @@ def tickers(symbols: str = "ARKUSDT,BTCUSDT,ETHUSDT,SOLUSDT,FETUSDT,BNBUSDT,DOGE
             detail={"error_class": exc.error_class, "classification": "UNKNOWN"},
         ) from exc
     return {**body, "captured_at": utcnow().isoformat()}
+
+
+@router.get("/v1/symbols")
+def symbols() -> dict[str, Any]:
+    settings = get_settings()
+    try:
+        return fetch_spot_universe(
+            rest_base=settings.binance_rest_base,
+            timeout_s=settings.http_timeout_s,
+            fallback_base=settings.binance_rest_fallback,
+            classification="LIVE",
+        )
+    except MarketError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error_class": exc.error_class, "classification": "UNKNOWN"},
+        ) from exc
 
 
 def _nonzero_balances(payload: Any) -> list[dict[str, str]]:

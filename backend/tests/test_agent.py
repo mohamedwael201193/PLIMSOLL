@@ -22,6 +22,17 @@ def test_intent_ark_one_day():
     assert d.intent.needs_clarification is False
 
 
+def test_intent_sol_is_not_ark():
+    d = run_once(
+        text="I want $1000 of SOL and need to exit within one day.",
+        snapshot=snapshot(symbol="SOLUSDT", quote_volume="1000000"),
+        constitution=CONST,
+    )
+    assert d.intent.symbol == "SOLUSDT"
+    assert d.intent.target_notional == Decimal("1000")
+    assert d.intent.needs_clarification is False
+
+
 def test_intent_bps_constraint():
     d = run_once(
         text="Buy $500 of ARKUSDT but don't exceed 50 bps exit cost.",

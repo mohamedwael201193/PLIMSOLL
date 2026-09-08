@@ -55,6 +55,14 @@ export function fmtClock(input: number | string): string {
   return d.toLocaleTimeString("en-GB", { hour12: false });
 }
 
+export function freshnessLabel(ts: number): string {
+  if (!Number.isFinite(ts) || ts <= 0) return "UNKNOWN";
+  const ageS = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (ageS < 20) return `${ageS}s`;
+  if (ageS < 60) return `${ageS}s`;
+  return `${ageS}s`;
+}
+
 function formatStepperValue(v: number, unit: string): string {
   if (unit === "USD") return `$${Math.round(v).toLocaleString("en-US")}`;
   if (unit === "DAYS") return `${v.toFixed(2)} ${unit}`;
@@ -544,6 +552,12 @@ function ReadoutBody({ result, showClassification }: { result: CapacityResult; s
           REQUESTED <span className="text-white/85">{fmtUsdFull(result.requestedNotional)}</span>
         </span>
         <span>
+          COST <span className="text-white/85">{fmtUsdFull(result.costCapacity)}</span>
+        </span>
+        <span>
+          TIME <span className="text-white/85">{fmtUsdFull(result.timeCapacity)}</span>
+        </span>
+        <span>
           MID <span className="text-white/85">{result.snapshot.mid.toFixed(4)}</span>
         </span>
       </div>
@@ -568,11 +582,13 @@ function ReadoutBody({ result, showClassification }: { result: CapacityResult; s
       <p className="mt-4 font-grotesk text-[12px] sm:text-[13px] leading-relaxed text-white/75">{result.narrative}</p>
 
       <div className="mt-4 pt-3 border-t border-plimsoll/15 font-code text-[8px] sm:text-[9px] tracking-[0.12em] text-plimsoll/50 flex flex-wrap gap-x-4 gap-y-1">
+        <span>SOURCE {result.source || "OREGON"}</span>
+        <span>FRESHNESS {freshnessLabel(result.snapshot.ts)}</span>
+        <span>CAPTURED {result.capturedAt || fmtClock(result.snapshot.ts)}</span>
         <span>SNAPSHOT {result.snapshot.hash}</span>
         <span>SPREAD {result.snapshot.spreadBps.toFixed(1)} BPS</span>
         <span>VISIBLE BID {fmtUsd(result.snapshot.visibleBidNotional)}</span>
         <span>24H QV {fmtUsd(result.snapshot.quoteVolume24h)}</span>
-        <span>TS {fmtClock(result.snapshot.ts)}</span>
       </div>
     </div>
   );

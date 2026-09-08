@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { ASSETS, type CapacityConstraints } from "@/lib/capacity";
+import { isSpotUsdtSymbol, type CapacityConstraints } from "@/lib/capacity";
 import { intentText, mapCapacityBody, postIntent } from "@/lib/oregon";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "invalid constraints payload" }, { status: 400 });
     }
-    if (!ASSETS.some((a) => a.symbol === parsed.data.symbol)) {
+    if (!isSpotUsdtSymbol(parsed.data.symbol)) {
       return NextResponse.json({ error: "unsupported symbol" }, { status: 400 });
     }
     const c = parsed.data as CapacityConstraints;

@@ -9,7 +9,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { DEFAULT_CONSTRAINTS, getAsset, type AssetInfo } from "@/lib/capacity";
+import { DEFAULT_CONSTRAINTS, assetFromSymbol, getAsset, type AssetInfo } from "@/lib/capacity";
 import { getTickers, postCapacity } from "@/lib/oregon";
 import { useAccount } from "@/lib/useAccount";
 import { useCapacity, useCapacityHistory } from "./useCapacity";
@@ -36,9 +36,8 @@ interface Props {
 const DETAIL_ACTIONS = ["TRIM", "STAGE", "WAIT", "HOLD"];
 
 export default function PositionDetail({ glitch, symbol }: Props) {
-  const asset = getAsset(symbol);
+  const asset = getAsset(symbol) ?? assetFromSymbol(symbol);
 
-  /* outside the measured universe */
   if (!asset) {
     return (
       <main
@@ -49,11 +48,10 @@ export default function PositionDetail({ glitch, symbol }: Props) {
           <BackLink />
           <section className="corner-frame-4 text-plimsoll border border-plimsoll/30 bg-plimsoll-ink p-6 sm:p-10 mt-6 max-w-xl">
             <Corners />
-            <div className="font-code text-[10px] tracking-[0.3em] text-rose-300">UNSUPPORTED SYMBOL</div>
+            <div className="font-code text-[10px] tracking-[0.3em] text-rose-300">INVALID SYMBOL</div>
             <h1 className="mt-3 font-display text-2xl sm:text-3xl text-white break-all">{symbol}</h1>
             <p className="mt-3 font-grotesk text-[13px] leading-relaxed text-white/60">
-              This symbol is outside the measured universe. The desk estimates capacity for ARK, BTC, ETH,
-              SOL, FET, BNB and DOGE — nothing else.
+              Use a currently tradable Spot USDT pair from live Binance exchange metadata. The desk does not invent markets.
             </p>
             <a
               href="#/app"

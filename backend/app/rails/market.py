@@ -124,7 +124,13 @@ def _fetch_one(
     symbols = (info.get("symbols") if isinstance(info, dict) else None) or []
     if not symbols:
         raise MarketError("MALFORMED_JSON", "exchangeInfo missing symbol")
-    filters = filters_from_exchange_info(symbols[0])
+    info_sym = symbols[0]
+    status = str(info_sym.get("status") or "")
+    if status != "TRADING":
+        raise MarketError("NOT_TRADING", f"{symbol} status={status or 'unknown'}")
+    if info_sym.get("isSpotTradingAllowed") is False:
+        raise MarketError("NOT_TRADING", f"{symbol} spot trading not allowed")
+    filters = filters_from_exchange_info(info_sym)
     captured = datetime.now(timezone.utc)
     bids_raw = [[str(a), str(b)] for a, b in depth.get("bids") or []]
     asks_raw = [[str(a), str(b)] for a, b in depth.get("asks") or []]
@@ -215,6 +221,102 @@ def fetch_tickers(
                     "source": f"{base}/api/v3/ticker/24hr",
                     "rows": out,
                 }
+            except MarketError as exc:
+                last_error = exc
+                retryable = exc.error_class in {
+                    "IP_BANNED",
+                    "HTTP_ERROR",
+                    "CONNECTION_FAILURE",
+                    "TIMEOUT",
+                }
+                if retryable and i < len(bases) - 1:
+                    continue
+                raise
+        assert last_error is not None
+        raise last_error
+    finally:
+        if own:
+            client.close()
+
+
+_UNIVERSE_TTL_S = 90.0
+_universe_cache: dict | None = None
+_universe_cached_at = 0.0
+
+
+def fetch_spot_universe(
+    *,
+    rest_base: str,
+    timeout_s: float,
+    fallback_base: str | None = None,
+    client: httpx.Client | None = None,
+    classification: str = "LIVE",
+) -> dict:
+    """TRADING USDT Spot pairs from live exchangeInfo. Cached briefly. Never invents symbols."""
+    global _universe_cache, _universe_cached_at
+    now = datetime.now(timezone.utc).timestamp()
+    if _universe_cache is not None and now - _universe_cached_at < _UNIVERSE_TTL_S:
+        return _universe_cache
+
+    own = client is None
+    client = client or httpx.Client(timeout=timeout_s)
+    bases = [rest_base.rstrip("/")]
+    extras: list[str] = []
+    if fallback_base:
+        extras.append(fallback_base.rstrip("/"))
+    extras.extend(OFFICIAL_REST_ALTERNATES)
+    for extra in extras:
+        if extra and extra not in bases:
+            bases.append(extra)
+    last_error: MarketError | None = None
+    try:
+        for i, base in enumerate(bases):
+            try:
+                info = _get_json(client, f"{base}/api/v3/exchangeInfo", {})
+                raw_syms = info.get("symbols") if isinstance(info, dict) else None
+                if not isinstance(raw_syms, list) or not raw_syms:
+                    raise MarketError("MALFORMED_JSON", "exchangeInfo missing symbols")
+                rows = []
+                for item in raw_syms:
+                    if not isinstance(item, dict):
+                        continue
+                    if item.get("status") != "TRADING":
+                        continue
+                    if item.get("isSpotTradingAllowed") is False:
+                        continue
+                    quote = str(item.get("quoteAsset") or "")
+                    symbol = str(item.get("symbol") or "")
+                    if quote != "USDT" or not symbol.endswith("USDT"):
+                        continue
+                    filt = filters_from_exchange_info(item)
+                    rows.append(
+                        {
+                            "symbol": symbol,
+                            "base": str(item.get("baseAsset") or symbol.replace("USDT", "")),
+                            "quote": quote,
+                            "status": "TRADING",
+                            "min_notional": str(filt.min_notional),
+                            "lot_min": str(filt.lot_min),
+                            "lot_step": str(filt.lot_step),
+                            "tick_size": str(filt.tick_size),
+                        }
+                    )
+                if not rows:
+                    raise MarketError("MALFORMED_JSON", "no TRADING USDT spot pairs")
+                body = {
+                    "classification": classification,
+                    "source": f"{base}/api/v3/exchangeInfo",
+                    "captured_at": datetime.now(timezone.utc).isoformat(),
+                    "count": len(rows),
+                    "note": (
+                        "Currently tradable Spot USDT pairs from live Binance exchange metadata. "
+                        "Not a claim that every listed coin is supported forever."
+                    ),
+                    "symbols": rows,
+                }
+                _universe_cache = body
+                _universe_cached_at = datetime.now(timezone.utc).timestamp()
+                return body
             except MarketError as exc:
                 last_error = exc
                 retryable = exc.error_class in {

@@ -7,7 +7,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { ASSETS, DEFAULT_CONSTRAINTS, getAsset } from "@/lib/capacity";
+import { DEFAULT_CONSTRAINTS, assetFromSymbol, getAsset } from "@/lib/capacity";
 import { getTickers, postCapacity } from "@/lib/oregon";
 import { useAccount } from "@/lib/useAccount";
 import { ConnectPanel } from "../ConnectPanel";
@@ -46,35 +46,39 @@ export default function Portfolio({ glitch }: Props) {
     const run = async () => {
       setLoadError(null);
       try {
-        const crypto = account.balances.filter((b) => b.asset !== "USDT" && Number(b.free) + Number(b.locked) > 0);
+        const crypto = account.balances.filter((b) => b.asset !== "USDT" && Number(b.free) + Number(b.locked) > 0).slice(0, 12);
         const symbols = crypto
-          .map((b) => ASSETS.find((a) => a.base === b.asset)?.symbol)
+          .map((b) => assetFromSymbol(`${b.asset}USDT`)?.symbol)
           .filter((s): s is string => Boolean(s));
         const tickers = symbols.length ? await getTickers(symbols) : { rows: [], classification: "UNKNOWN" };
         const lastBy = Object.fromEntries((tickers.rows || []).map((r) => [r.symbol, r.last]));
         const next: LivePosition[] = [];
         for (const b of crypto) {
-          const asset = ASSETS.find((a) => a.base === b.asset);
+          const asset = assetFromSymbol(`${b.asset}USDT`);
           if (!asset) continue;
           const qty = Number(b.free) + Number(b.locked);
           const last = lastBy[asset.symbol];
           if (!(last > 0)) continue;
           const markValue = qty * last;
-          const { mapped } = await postCapacity(
-            { ...DEFAULT_CONSTRAINTS, symbol: asset.symbol, targetNotional: Math.max(500, Math.round(markValue)) },
-            { symbol: asset.symbol, base_qty: String(qty) }
-          );
-          const capacity = mapped.exitCapacity;
-          const utilization = capacity > 0 ? (markValue / capacity) * 100 : 0;
-          next.push({
-            symbol: asset.symbol,
-            qty,
-            markValue,
-            capacity,
-            utilization,
-            status: markValue > capacity ? "OVER_CAPACITY" : "WITHIN_CAPACITY",
-            classification: mapped.classification,
-          });
+          try {
+            const { mapped } = await postCapacity(
+              { ...DEFAULT_CONSTRAINTS, symbol: asset.symbol, targetNotional: Math.max(500, Math.round(markValue)) },
+              { symbol: asset.symbol, base_qty: String(qty) }
+            );
+            const capacity = mapped.exitCapacity;
+            const utilization = capacity > 0 ? (markValue / capacity) * 100 : 0;
+            next.push({
+              symbol: asset.symbol,
+              qty,
+              markValue,
+              capacity,
+              utilization,
+              status: markValue > capacity ? "OVER_CAPACITY" : "WITHIN_CAPACITY",
+              classification: mapped.classification,
+            });
+          } catch {
+            /* live filters or book unavailable — do not invent a row */
+          }
         }
         if (alive) setRows(next);
       } catch (e) {
@@ -161,8 +165,8 @@ export default function Portfolio({ glitch }: Props) {
                 )}
                 {rows && list.length === 0 && (
                   <div className="py-10 text-center font-code text-[10px] tracking-[0.2em] text-plimsoll/50">
-                    {loadError || "NO SUPPORTED SPOT POSITIONS ON THE CONNECTED ACCOUNT"}
-                    <div className="mt-2 text-plimsoll/35">USDT AND UNSUPPORTED ASSETS ARE NOT INVENTED INTO THIS TABLE</div>
+                    {loadError || "NO SPOT POSITIONS ON THE CONNECTED ACCOUNT"}
+                    <div className="mt-2 text-plimsoll/35">USDT IS NOT INVENTED INTO THIS TABLE. ROWS REQUIRE A LIVE USDT MARKET AND A REAL BALANCE.</div>
                   </div>
                 )}
                 {list.map((p, i) => (
@@ -193,7 +197,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone: stri
 }
 
 function PositionRow({ p, i }: { p: LivePosition; i: number }) {
-  const asset = getAsset(p.symbol);
+  const asset = getAsset(p.symbol) ?? assetFromSymbol(p.symbol);
   const over = p.status === "OVER_CAPACITY";
 
   return (
@@ -212,8 +216,8 @@ function PositionRow({ p, i }: { p: LivePosition; i: number }) {
         <div className="min-w-0">
           <div className="font-code text-xs tracking-[0.1em] text-plimsoll">{p.symbol}</div>
           <div className="font-grotesk text-[12px] text-white/60 truncate">
-            {asset?.name ?? "—"}
-            {asset ? ` · ${p.qty.toLocaleString("en-US")} ${asset.base}` : ""}
+            {asset?.name ?? p.symbol.replace(/USDT$/, "")}
+            {` · ${p.qty.toLocaleString("en-US")} ${asset?.base ?? p.symbol.replace(/USDT$/, "")}`}
           </div>
         </div>
       </div>

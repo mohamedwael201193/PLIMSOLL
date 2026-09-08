@@ -17,6 +17,10 @@ _KNOWN = {
     "ARKUSDT": "ARKUSDT",
     "BTC": "BTCUSDT",
     "ETH": "ETHUSDT",
+    "SOL": "SOLUSDT",
+    "BNB": "BNBUSDT",
+    "FET": "FETUSDT",
+    "DOGE": "DOGEUSDT",
     "USDT": None,
 }
 
@@ -41,6 +45,8 @@ def parse_intent(text: str) -> Intent:
             "HOLD", "TELL", "THE", "AND", "FOR", "BUT", "COST", "BPS",
             "DONT", "INCREASE", "POSITION", "LIQUIDITY", "FALLING",
             "ALREADY", "OVER", "CAPACITY", "USDT",
+            "TO", "AS", "AT", "ON", "BE", "IS", "IT", "OR", "AN", "NO",
+            "BY", "UP", "SO", "MAX", "MIN", "ALL", "LIVE", "ASK",
         }:
             continue
         if cand:
@@ -48,6 +54,9 @@ def parse_intent(text: str) -> Intent:
             break
         if token.endswith("USDT") and len(token) > 4:
             symbol = token
+            break
+        if 2 <= len(token) <= 10 and token.isalpha():
+            symbol = f"{token}USDT"
             break
     # ARK special from mixed case
     if symbol is None:
@@ -86,7 +95,7 @@ def parse_intent(text: str) -> Intent:
     clarification = None
     if symbol is None:
         needs = True
-        clarification = "Which symbol? Use an official Spot pair such as ARKUSDT."
+        clarification = "Which symbol? Use a currently tradable Spot pair from live exchange metadata (for example ARKUSDT)."
     elif target is None and held is None and side != "HOLD":
         needs = True
         clarification = "What notional in quote (USDT) do you want, and what exit cost/horizon constraints?"

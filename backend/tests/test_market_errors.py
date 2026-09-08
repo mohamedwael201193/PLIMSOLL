@@ -37,6 +37,8 @@ def test_418_falls_back_to_official_market_data_host():
                     {
                         "baseAsset": "ARK",
                         "quoteAsset": "USDT",
+                        "status": "TRADING",
+                        "isSpotTradingAllowed": True,
                         "filters": [
                             {"filterType": "PRICE_FILTER", "tickSize": "0.0001"},
                             {"filterType": "LOT_SIZE", "minQty": "1", "maxQty": "1000", "stepSize": "1"},
@@ -84,3 +86,40 @@ def test_timeout():
             fallback_base=None,
         )
     assert exc.value.error_class == "TIMEOUT"
+
+
+def test_halted_symbol_is_not_trading():
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/depth"):
+            return httpx.Response(200, json={"bids": [["1.0", "1"]], "asks": [["1.1", "1"]]})
+        if "ticker/24hr" in str(request.url):
+            return httpx.Response(200, json={"quoteVolume": "10", "lastPrice": "1.05"})
+        return httpx.Response(
+            200,
+            json={
+                "symbols": [
+                    {
+                        "baseAsset": "FOO",
+                        "quoteAsset": "USDT",
+                        "status": "BREAK",
+                        "isSpotTradingAllowed": True,
+                        "filters": [
+                            {"filterType": "PRICE_FILTER", "tickSize": "0.0001"},
+                            {"filterType": "LOT_SIZE", "minQty": "1", "maxQty": "1000", "stepSize": "1"},
+                            {"filterType": "NOTIONAL", "minNotional": "5", "applyMinToMarket": True, "applyMaxToMarket": False},
+                        ],
+                    }
+                ]
+            },
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    with pytest.raises(MarketError) as exc:
+        fetch_snapshot(
+            symbol="FOOUSDT",
+            rest_base="https://api.binance.com",
+            timeout_s=2,
+            client=client,
+            fallback_base=None,
+        )
+    assert exc.value.error_class == "NOT_TRADING"

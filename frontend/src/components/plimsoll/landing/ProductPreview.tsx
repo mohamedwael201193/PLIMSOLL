@@ -152,7 +152,7 @@ export default function ProductPreview({ glitch }: Props) {
                 <div className="font-code text-[8px] tracking-[0.2em] text-white/40 mb-1">
                   ILLUSTRATION — OPEN THE DESK FOR LIVE SERIES
                 </div>
-                <svg viewBox="0 0 400 160" className="w-full h-auto" role="img" aria-label="Capacity line crossing below the position line, then recovering">
+                <svg viewBox="0 0 400 160" className="w-full h-auto" role="img" aria-label="Illustration of a capacity line moving under a held position. Not live data.">
                   {/* gridlines */}
                   {[40, 80, 120].map((y) => (
                     <line key={y} x1="0" y1={y} x2="400" y2={y} stroke="rgba(238,241,246,0.08)" strokeWidth="1" />
@@ -182,13 +182,13 @@ export default function ProductPreview({ glitch }: Props) {
                     transition={{ delay: 1.3, duration: 0.3 }}
                   />
                   <text x="200" y="140" fill="rgba(251,113,133,0.9)" fontSize="9" fontFamily="monospace" textAnchor="middle" letterSpacing="2">
-                    09:07 OVER
+                    T2 OVER
                   </text>
                   <text x="4" y="150" fill="rgba(238,241,246,0.35)" fontSize="9" fontFamily="monospace" letterSpacing="2">
-                    09:00
+                    T1
                   </text>
                   <text x="396" y="150" fill="rgba(238,241,246,0.35)" fontSize="9" fontFamily="monospace" textAnchor="end" letterSpacing="2">
-                    09:10
+                    T2
                   </text>
                 </svg>
               </div>

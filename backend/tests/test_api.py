@@ -106,6 +106,20 @@ def test_tickers_live_or_classified_failure():
         assert "last" in body["rows"][0]
 
 
+def test_symbols_live_or_classified_failure():
+    r = client.get("/v1/symbols")
+    assert r.status_code in {200, 503}
+    if r.status_code == 200:
+        body = r.json()
+        assert body["classification"] == "LIVE"
+        assert body["count"] >= 3
+        names = {row["symbol"] for row in body["symbols"]}
+        assert "BTCUSDT" in names
+        assert "ETHUSDT" in names
+        assert all(row["symbol"].endswith("USDT") for row in body["symbols"])
+        assert all(row["status"] == "TRADING" for row in body["symbols"])
+
+
 def test_fills_without_db_is_empty():
     r = client.get("/v1/fills")
     assert r.status_code == 200

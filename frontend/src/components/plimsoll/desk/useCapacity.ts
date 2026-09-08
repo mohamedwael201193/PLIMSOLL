@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ASSETS, DEFAULT_CONSTRAINTS, type CapacityConstraints, type CapacityResult, type Classification } from "@/lib/capacity";
+import { DEFAULT_CONSTRAINTS, isSpotUsdtSymbol, type CapacityConstraints, type CapacityResult, type Classification } from "@/lib/capacity";
 import { getSnapshots, intentText, postIntent } from "@/lib/oregon";
 
 const STORAGE_KEY = "plimsoll-constitution";
@@ -77,7 +77,7 @@ function readStoredConstitution(): CapacityConstraints | null {
     const parsed: unknown = JSON.parse(raw);
     if (typeof parsed !== "object" || parsed === null) return null;
     const o = parsed as Record<string, unknown>;
-    if (typeof o.symbol !== "string" || !ASSETS.some((a) => a.symbol === o.symbol)) return null;
+    if (typeof o.symbol !== "string" || !isSpotUsdtSymbol(o.symbol)) return null;
     const num = (v: unknown): number | null =>
       typeof v === "number" && Number.isFinite(v) ? v : null;
     const targetNotional = num(o.targetNotional);

@@ -43,7 +43,7 @@ function mapBinding(raw: string | undefined): Binding {
 }
 
 function mapClass(raw: string | undefined): Classification {
-  if (raw === "LIVE" || raw === "REPLAY" || raw === "PAPER" || raw === "SIMULATED") return raw;
+  if (raw === "LIVE" || raw === "REPLAY" || raw === "PAPER" || raw === "SIMULATED" || raw === "TESTNET") return raw;
   return "UNKNOWN";
 }
 
@@ -169,6 +169,29 @@ export async function getTickers(symbols: string[]) {
     source: string;
     captured_at?: string;
     rows: Array<{ symbol: string; last: number; change: number; quoteVolume: number }>;
+  };
+}
+
+export async function getSymbols() {
+  const res = await fetch(`${API_BASE}/v1/symbols`, { cache: "no-store" });
+  const body = await parse(res);
+  if (!res.ok) throw new Error(body?.detail?.error_class || `symbols ${res.status}`);
+  return body as {
+    classification: string;
+    source: string;
+    captured_at?: string;
+    count: number;
+    note?: string;
+    symbols: Array<{
+      symbol: string;
+      base: string;
+      quote: string;
+      status: string;
+      min_notional: string;
+      lot_min: string;
+      lot_step: string;
+      tick_size: string;
+    }>;
   };
 }
 

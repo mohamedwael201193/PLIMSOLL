@@ -98,6 +98,10 @@ const FAQ_ITEMS = [
     a: "Visible book only. 24h volume is an assumption. Icebergs, spoofing, and hidden liquidity are not modelled. Capacity is estimated, not guaranteed. Markets change. Execution needs explicit confirmation. Agent OS web authorization currently requires a Binance-supported Agent client.",
   },
   {
+    q: "WHICH ASSETS DOES PLIMSOLL SUPPORT?",
+    a: "Works with currently tradable Spot symbols supported by the live Binance exchange metadata and their current trading filters. ARKUSDT is a validation pair, not the product's only asset. PLIMSOLL does not claim to support every Binance coin.",
+  },
+  {
     q: "DOES PLIMSOLL TRADE FOR ME?",
     a: "Only after an explicit approval and a typed operator CONFIRM. Without writes enabled, a fresh snapshot and an unexpired token, nothing executes.",
   },
@@ -539,6 +543,14 @@ binding        = the constraint that produced the minimum`}
                 capacity, the binding constraint, the recommendation and the snapshot it was
                 computed from.
               </p>
+
+              <CodeBlock title="LIVE TRADABLE UNIVERSE">
+{`GET /v1/symbols
+
+200 OK — currently TRADING Spot USDT pairs from live exchangeInfo.
+Filters (min notional, lot, step, tick) are included per symbol.
+Not a claim that every listed coin remains tradable forever.`}
+              </CodeBlock>
 
               <CodeBlock title="REQUEST — ESTIMATE CAPACITY">
 {`POST /v1/intent

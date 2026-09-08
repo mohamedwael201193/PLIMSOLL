@@ -24,6 +24,28 @@ export function getAsset(symbol: string): AssetInfo | undefined {
   return ASSETS.find((a) => a.symbol === symbol);
 }
 
+/** Shortcuts for the desk. Not the tradable universe. */
+export function normalizeSpotSymbol(raw: string): string | null {
+  const t = raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!t || t === "USDT") return null;
+  const symbol = t.endsWith("USDT") ? t : `${t}USDT`;
+  if (!/^[A-Z0-9]{2,20}USDT$/.test(symbol) || symbol.length < 6) return null;
+  return symbol;
+}
+
+export function isSpotUsdtSymbol(symbol: string): boolean {
+  return normalizeSpotSymbol(symbol) === symbol.trim().toUpperCase();
+}
+
+export function assetFromSymbol(symbol: string): AssetInfo | undefined {
+  const s = normalizeSpotSymbol(symbol);
+  if (!s) return undefined;
+  const known = getAsset(s);
+  if (known) return known;
+  const base = s.slice(0, -4);
+  return { symbol: s, base, name: base, icon: `/icons/${base}.png` };
+}
+
 export interface CapacityConstraints {
   symbol: string;
   targetNotional: number;
@@ -43,7 +65,7 @@ export const DEFAULT_CONSTRAINTS: CapacityConstraints = {
 };
 
 export type Binding = "COST" | "TIME" | "BOOK" | "FILTERS" | "NONE";
-export type Classification = "LIVE" | "REPLAY" | "PAPER" | "SIMULATED" | "UNKNOWN";
+export type Classification = "LIVE" | "REPLAY" | "PAPER" | "TESTNET" | "SIMULATED" | "UNKNOWN";
 export type DecisionAction =
   | "FILL_AS_ASKED"
   | "SIZE_DOWN"

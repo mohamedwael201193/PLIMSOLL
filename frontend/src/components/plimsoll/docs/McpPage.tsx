@@ -190,14 +190,37 @@ export default function McpPage({ glitch }: Props) {
             <p className="mt-3 font-code text-[10px] tracking-[0.12em] text-rose-300">{caps.reason}</p>
           )}
           {caps?.capabilities && (
-            <ul className="mt-4 grid sm:grid-cols-2 gap-2 font-code text-[10px] tracking-[0.12em]">
-              {Object.entries(caps.capabilities).map(([k, v]) => (
-                <li key={k} className="flex justify-between gap-3 border border-plimsoll/15 px-3 py-2">
-                  <span className="text-white/45">{k}</span>
-                  <span className="text-plimsoll break-all text-right">{v}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-4 grid sm:grid-cols-2 gap-3">
+              <div>
+                <div className="font-code text-[9px] tracking-[0.2em] text-plimsoll/50 mb-2">READ</div>
+                <ul className="space-y-2 font-code text-[10px] tracking-[0.12em]">
+                  {Object.entries(caps.capabilities)
+                    .filter(([k]) => !/NEW|WRITE|CANCEL/i.test(k))
+                    .map(([k, v]) => (
+                      <li key={k} className="flex justify-between gap-3 border border-plimsoll/15 px-3 py-2">
+                        <span className="text-white/45">{k}</span>
+                        <span className="text-plimsoll break-all text-right">{v}</span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+              <div>
+                <div className="font-code text-[9px] tracking-[0.2em] text-plimsoll/50 mb-2">WRITE</div>
+                <ul className="space-y-2 font-code text-[10px] tracking-[0.12em]">
+                  {Object.entries(caps.capabilities)
+                    .filter(([k]) => /NEW|WRITE|CANCEL/i.test(k))
+                    .map(([k, v]) => (
+                      <li key={k} className="flex justify-between gap-3 border border-plimsoll/15 px-3 py-2">
+                        <span className="text-white/45">{k}</span>
+                        <span className="text-plimsoll break-all text-right">{v}</span>
+                      </li>
+                    ))}
+                  {!Object.keys(caps.capabilities).some((k) => /NEW|WRITE|CANCEL/i.test(k)) && (
+                    <li className="border border-plimsoll/15 px-3 py-2 text-white/40">UNBOUND — NO WRITE TOOLS</li>
+                  )}
+                </ul>
+              </div>
+            </div>
           )}
         </motion.div>
 

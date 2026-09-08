@@ -7,15 +7,13 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 import { AGENTS, AGENT_LOOP } from "@/lib/agents";
-import { ASSETS, DEFAULT_CONSTRAINTS } from "@/lib/capacity";
+import { DEFAULT_CONSTRAINTS } from "@/lib/capacity";
 import { getFills, getHealth, postApproval, postExecute, postPrepare, postResolve } from "@/lib/oregon";
 import { useAccount } from "@/lib/useAccount";
 import { useCapacity, useCapacityHistory, type ObservationRow } from "./useCapacity";
 import {
-  BEZIER,
   CapacityBarsCard,
   CapacityChartCard,
   CapacityReadout,
@@ -26,6 +24,7 @@ import {
   fmtClock,
 } from "./shared";
 import { useToast } from "@/hooks/use-toast";
+import SymbolPicker from "../SymbolPicker";
 
 interface Props {
   glitch: boolean;
@@ -49,6 +48,11 @@ for (const a of AGENTS) {
   LOOP_LINE[a.loop] = a.line;
 }
 LOOP_AGENT.ASK = "OPERATOR";
+LOOP_AGENT.PLAN = "CARTOGRAPHER";
+LOOP_AGENT.DECIDE = "OPERATOR";
+LOOP_LINE.PLAN = "Shape a size that still fits the line.";
+LOOP_LINE.DECIDE = "Recommend FILL, SIZE DOWN, TRIM, STAGE, or WAIT.";
+LOOP_LINE.ASK = "No financial write until the operator approves.";
 
 export default function Desk({ glitch, symbol }: Props) {
   const cap = useCapacity(
@@ -209,7 +213,7 @@ export default function Desk({ glitch, symbol }: Props) {
               result={cap.result}
               loading={cap.loading}
               header={
-                <AssetSelector
+                <SymbolPicker
                   symbol={cap.constraints.symbol}
                   onSelect={(s) => {
                     cap.patch({ symbol: s });
@@ -296,128 +300,41 @@ export default function Desk({ glitch, symbol }: Props) {
 }
 
 /* ───────────────────────────────────────────────
-   asset selector — 24px icons, active = gold
-   ─────────────────────────────────────────────── */
-
-function AssetSelector({ symbol, onSelect }: { symbol: string; onSelect: (s: string) => void }) {
-  return (
-    <div className="mb-4 pb-4 border-b border-plimsoll/15" role="group" aria-label="Asset">
-      <div className="font-code text-[9px] tracking-[0.25em] text-plimsoll/50 mb-2">ASSET</div>
-      <div className="flex flex-wrap gap-1.5">
-        {ASSETS.map((a) => {
-          const active = a.symbol === symbol;
-          return (
-            <button
-              key={a.symbol}
-              type="button"
-              aria-pressed={active}
-              onClick={() => onSelect(a.symbol)}
-              className={`flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 border font-code text-[10px] tracking-[0.1em] transition-colors ${
-                active
-                  ? "bg-plimsoll text-plimsoll-black border-plimsoll"
-                  : "border-plimsoll/25 text-plimsoll/60 hover:border-plimsoll/60 hover:text-plimsoll"
-              } ${focusGold}`}
-              aria-label={`Solve capacity for ${a.symbol}`}
-            >
-              <img src={a.icon} alt="" className="w-6 h-6" width={24} height={24} draggable={false} loading="lazy" />
-              <span>{a.base}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* ───────────────────────────────────────────────
-   agent state — the loop rail, cycling every 2.5s
+   agent loop — implemented stages, not a fake activity feed
    ─────────────────────────────────────────────── */
 
 function AgentStateCard() {
-  const [step, setStep] = useState(0);
-  const [paused, setPaused] = useState(false);
-
-  useEffect(() => {
-    if (paused) return;
-    const id = window.setInterval(() => setStep((s) => (s + 1) % AGENT_LOOP.length), 2500);
-    return () => window.clearInterval(id);
-  }, [paused]);
-
   return (
-    <section
-      aria-label="Agent state"
-      className="corner-frame-4 text-plimsoll border border-plimsoll/25 bg-plimsoll-black/95 p-4 sm:p-6"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
-    >
+    <section aria-label="Agent loop" className="corner-frame-4 text-plimsoll border border-plimsoll/25 bg-plimsoll-black/95 p-4 sm:p-6">
       <Corners />
       <div className="flex items-center justify-between font-code text-[10px] tracking-[0.3em]">
-        <span className="text-plimsoll">AGENT STATE</span>
-        <span className="text-white/30">
-          {paused ? "PAUSED" : `STEP ${step + 1}/0${AGENT_LOOP.length}`}
-        </span>
+        <span className="text-plimsoll">AGENT LOOP</span>
+        <span className="text-white/30">{AGENT_LOOP.length} STAGES</span>
       </div>
-
       <p className="sr-only">
-        The agent loop runs observe, understand, plan, decide, ask, act, verify and adapt, continuously.
+        The agent loop is observe, understand, plan, decide, ask, act, verify and adapt. Characters map to implemented stages.
       </p>
-
-      <ol className="relative mt-4" aria-hidden="true">
+      <ol className="relative mt-4">
         <span aria-hidden className="absolute left-[9px] top-3 bottom-3 w-px bg-plimsoll/15" />
-        {AGENT_LOOP.map((name, i) => {
-          const active = i === step;
+        {AGENT_LOOP.map((name) => {
           const agent = LOOP_AGENT[name];
           const line = LOOP_LINE[name];
           return (
             <li key={name} className="relative py-1.5 pl-1">
-              {active && (
-                <motion.span
-                  layoutId="loop-cursor"
-                  transition={{ duration: 0.45, ease: BEZIER }}
-                  className="absolute inset-0 border border-plimsoll/30 bg-plimsoll/5"
-                />
-              )}
               <div className="relative z-10 flex items-center gap-3">
-                <span className={`w-2.5 h-2.5 shrink-0 ${active ? "bg-plimsoll" : "bg-plimsoll/20"}`} />
-                <span
-                  className={`font-code text-[10px] sm:text-[11px] tracking-[0.2em] ${
-                    active ? "text-plimsoll" : "text-white/35"
-                  }`}
-                >
-                  {name}
-                </span>
+                <span className="w-2.5 h-2.5 shrink-0 bg-plimsoll/50" />
+                <span className="font-code text-[10px] sm:text-[11px] tracking-[0.2em] text-plimsoll/80">{name}</span>
                 {agent && (
-                  <span
-                    className={`ml-auto font-code text-[8px] tracking-[0.15em] ${
-                      active ? "text-plimsoll/60" : "text-white/25"
-                    }`}
-                  >
-                    {agent}
-                  </span>
+                  <span className="ml-auto font-code text-[8px] tracking-[0.15em] text-plimsoll/45">{agent}</span>
                 )}
               </div>
-              {active && line && (
-                <motion.p
-                  key={name}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.4 }}
-                  className="relative z-10 pl-[22px] mt-1 font-grotesk text-[11px] leading-snug text-white/50"
-                >
-                  {line}
-                </motion.p>
+              {line && (
+                <p className="relative z-10 pl-[22px] mt-1 font-grotesk text-[11px] leading-snug text-white/45">{line}</p>
               )}
             </li>
           );
         })}
       </ol>
-
-      <div className="mt-3 pt-3 border-t border-plimsoll/10 font-code text-[8px] tracking-[0.2em] text-white/30 flex justify-between">
-        <span>CYCLE 2.5S</span>
-        <span>PAUSE ON HOVER</span>
-      </div>
     </section>
   );
 }
