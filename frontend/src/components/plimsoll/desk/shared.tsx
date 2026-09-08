@@ -243,7 +243,7 @@ export function ConstraintsPanel({
 }: {
   constraints: CapacityConstraints;
   onPatch: (p: Partial<CapacityConstraints>) => void;
-  onCompute: () => void;
+  onCompute: (override?: CapacityConstraints) => void;
   loading: boolean;
   error: string | null;
   stale: boolean;
@@ -278,7 +278,11 @@ export function ConstraintsPanel({
               <button
                 key={n}
                 type="button"
-                onClick={() => onPatch({ targetNotional: n })}
+                onClick={() => {
+                  const next = { ...constraints, targetNotional: n };
+                  onPatch({ targetNotional: n });
+                  onCompute(next);
+                }}
                 aria-pressed={on}
                 className={`font-code text-[9px] tracking-[0.2em] border px-3 py-2 transition-colors ${
                   on

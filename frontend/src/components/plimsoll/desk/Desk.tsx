@@ -48,8 +48,8 @@ for (const a of AGENTS) {
   LOOP_LINE[a.loop] = a.line;
 }
 LOOP_AGENT.ASK = "OPERATOR";
-LOOP_AGENT.PLAN = "CARTOGRAPHER";
-LOOP_AGENT.DECIDE = "OPERATOR";
+LOOP_AGENT.PLAN = "DESK CORE";
+LOOP_AGENT.DECIDE = "DESK CORE";
 LOOP_LINE.PLAN = "Shape a size that still fits the line.";
 LOOP_LINE.DECIDE = "Recommend FILL, SIZE DOWN, TRIM, STAGE, or WAIT.";
 LOOP_LINE.ASK = "No financial write until the operator approves.";
@@ -228,7 +228,7 @@ export default function Desk({ glitch, symbol }: Props) {
             <ConstraintsPanel
               constraints={cap.constraints}
               onPatch={cap.patch}
-              onCompute={() => void cap.compute()}
+              onCompute={(override) => void cap.compute(override)}
               loading={cap.loading}
               error={cap.error}
               stale={cap.stale}
