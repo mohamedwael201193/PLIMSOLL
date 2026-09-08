@@ -76,7 +76,7 @@ describe("intentText", () => {
 });
 
 describe("oauthStartUrl", () => {
-  it("points CONNECT BINANCE at Oregon OAuth without embedding a token", () => {
+  it("points TRY WEB AUTHORIZE at Oregon OAuth without embedding a token", () => {
     const url = oauthStartUrl("https://plimsoll-jade.vercel.app");
     expect(url).toContain("/v1/oauth/start?return=");
     expect(url).toContain("plimsoll-jade.vercel.app");

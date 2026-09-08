@@ -6,7 +6,7 @@ import { ExternalLink, Ban, Lock, Hand, RefreshCw, FileJson, EyeOff, ArrowRight 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AGENT_LOOP } from "@/lib/agents";
 import { Corners, reveal, focusGold, fmtUsdFull } from "../landing/shared";
-import { DEFAULT_CONSTRAINTS } from "@/lib/capacity";
+import { DEFAULT_CONSTRAINTS, type CapacityResult } from "@/lib/capacity";
 import { intentText, postIntent } from "@/lib/oregon";
 
 interface Props {
@@ -54,28 +54,52 @@ const SAFETY_ITEMS = [
 
 const FAQ_ITEMS = [
   {
-    q: "IS THIS A GUARANTEED SAFE SIZE?",
-    a: "No. It is an estimate under your stated constraints, computed against the visible book at snapshot time. The line moves when the market moves.",
+    q: "WHAT DOES PLIMSOLL DO?",
+    a: "PLIMSOLL estimates how much exposure the market can support under your stated exit constraints — and keeps re-solving as conditions change.",
+  },
+  {
+    q: "IS THIS A GUARANTEED EXIT?",
+    a: "No. It is an estimated exit capacity under your stated constraints, computed against the visible book at snapshot time. The line moves when the market moves.",
+  },
+  {
+    q: "WHAT IS LIVE VERSUS REPLAY?",
+    a: "LIVE means the backend captured a current official market snapshot. REPLAY means a stored fixture used in tests. PAPER and SIMULATED are never presented as live. If the feed is unavailable the product says DATA UNAVAILABLE — it does not invent numbers.",
+  },
+  {
+    q: "WHAT IS BINANCE AGENT OS?",
+    a: "The official Binance surface for agentic accounts and MCP. PLIMSOLL uses it for account access, approved execution, and order read-back. Public capacity still uses official Spot REST. PLIMSOLL is not a Binance product and is not endorsed by Binance.",
+  },
+  {
+    q: "WHAT IS MCP?",
+    a: "Model Context Protocol. The official Agent OS endpoint is https://agent.binance.com/mcp/agentic. Tools are discovered at runtime. Reads (account, balance, get order) are separate from writes (new order after confirmation).",
+  },
+  {
+    q: "WHAT IS THE AGENTIC ACCOUNT?",
+    a: "The dedicated Agent OS virtual sub-account created at MCP OAuth — not a Normal Sub. MCP getAccount does not label Agentic vs master; the operator must authorize the Agentic account. This CIMD web client is currently refused (3346001).",
+  },
+  {
+    q: "HOW DOES APPROVAL WORK?",
+    a: "After a live solve, the operator issues a snapshot-bound approval token. That token is not a financial write. It expires. Stale snapshots refuse action.",
+  },
+  {
+    q: "HOW DOES EXECUTION WORK?",
+    a: "A live order requires writes enabled, a fresh snapshot, a valid approval, typed CONFIRM, a runtime MCP bind, then order submission. Without confirmation there is no write.",
+  },
+  {
+    q: "HOW DOES READ-BACK WORK?",
+    a: "After a real write: get order, then get account/balance, then reconcile. Only after successful reconciliation may the UI say EXECUTED. Otherwise it says EXECUTION STATE UNKNOWN or RECONCILIATION REQUIRED.",
+  },
+  {
+    q: "HOW DOES RE-SOLVING WORK?",
+    a: "POST /v1/resolve re-inverts a held position against a new snapshot. If capacity falls below the position, the agent flags OVER CAPACITY and may propose TRIM. It never silently sells.",
+  },
+  {
+    q: "WHAT ARE THE LIMITATIONS?",
+    a: "Visible book only. 24h volume is an assumption. Icebergs, spoofing, and hidden liquidity are not modelled. Capacity is estimated, not guaranteed. Markets change. Execution needs explicit confirmation. Agent OS web authorization currently requires a Binance-supported Agent client.",
   },
   {
     q: "DOES PLIMSOLL TRADE FOR ME?",
     a: "Only after an explicit approval and a typed operator CONFIRM. Without writes enabled, a fresh snapshot and an unexpired token, nothing executes.",
-  },
-  {
-    q: "WHAT HAPPENS WHEN I'M OVER CAPACITY?",
-    a: "A trim is proposed. PLIMSOLL never sells automatically — the sell decision, like every write, waits at the human gate.",
-  },
-  {
-    q: "IS THE DATA LIVE?",
-    a: "Payloads are labelled LIVE, REPLAY, PAPER or SIMULATED. You always know which kind of book you are looking at.",
-  },
-  {
-    q: "DOES IT MODEL HIDDEN LIQUIDITY?",
-    a: "No. The visible book only — icebergs and spoofing are not modelled. That is exactly why the book-fraction haircut exists.",
-  },
-  {
-    q: "WHAT IF THE FEED IS STALE?",
-    a: "Action is refused. Stale snapshots never pass the gate, and the loop halts until a fresh snapshot arrives.",
   },
 ];
 
@@ -276,10 +300,10 @@ binding        = the constraint that produced the minimum`}
               </p>
               <div className="mt-6 border border-plimsoll/25 divide-y divide-plimsoll/10">
                 {[
-                  { k: "MAX_EXIT_COST", v: "50 BPS", d: "All-in taker cost ceiling for the exit." },
-                  { k: "EXIT_HORIZON", v: "1 DAY", d: "The window the exit must fit inside." },
-                  { k: "PARTICIPATION", v: "10 % ADV", d: "How much of the tape you may be — the default." },
-                  { k: "BOOK_FRACTION", v: "50 %", d: "Share of the visible bid book that is trusted." },
+                  { k: "MAX_EXIT_COST", v: "50 BPS", d: "Maximum all-in cost you are willing to tolerate when exiting." },
+                  { k: "EXIT_HORIZON", v: "1 DAY", d: "How many days you allow for that exit." },
+                  { k: "PARTICIPATION", v: "10 % ADV", d: "How much of recent market volume you are willing to represent." },
+                  { k: "BOOK_FRACTION", v: "50 %", d: "How much of currently visible bids you are willing to rely on." },
                 ].map((row) => (
                   <div key={row.k} className="grid sm:grid-cols-[180px_110px_minmax(0,1fr)] gap-1 sm:gap-4 p-4">
                     <span className="font-code text-[10px] tracking-[0.2em] text-plimsoll">{row.k}</span>
@@ -338,8 +362,9 @@ binding        = the constraint that produced the minimum`}
             <section id="agent-os" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
               <SectionHead num="05" title="BINANCE AGENT OS" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
-                PLIMSOLL is built with Binance Agent OS. Every read and every write passes through
-                its MCP server — one pipe, bounded permissions, observable steps.
+                PLIMSOLL is built with Binance Agent OS. Public estimated exit capacity uses official
+                Spot market data. Account access, approved execution, and order read-back use the
+                official Agent OS MCP — bounded permissions, observable steps, no endorsement claimed.
               </p>
               <div className="mt-6 border border-plimsoll/25 divide-y divide-plimsoll/10">
                 <div className="p-4">
@@ -576,53 +601,11 @@ binding        = the constraint that produced the minimum`}
             <section id="examples" className="scroll-mt-32 pt-12 border-t border-plimsoll/10">
               <SectionHead num="12" title="EXAMPLES" />
               <p className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/75">
-                The $10,000 ARK walkthrough. An operator asks to hold $10,000 of ARK; the visible
-                book answers:
+                Ask for $10,000 of ARK on a one-day exit. Numbers below come from the live Oregon
+                backend — never hardcoded.
               </p>
 
-              <motion.div
-                {...reveal(0.05)}
-                className="corner-frame-4 text-plimsoll mt-6 max-w-xl border border-plimsoll/40 bg-plimsoll-black"
-              >
-                <Corners tone="gold" />
-                <div className="p-5 sm:p-6">
-                  <div className="flex items-center justify-between gap-2 font-code text-[9px] sm:text-[10px] tracking-[0.2em]">
-                    <span>REQUESTED — $10,000 · ARKUSDT</span>
-                    <span className="border border-plimsoll/30 text-plimsoll/70 px-1.5 py-0.5">LIVE</span>
-                  </div>
-                  <div className="mt-3 flex items-baseline gap-3 flex-wrap">
-                    <span className="font-display text-3xl sm:text-4xl text-plimsoll tabular-nums">
-                      $3,303
-                    </span>
-                    <span className="font-code text-[9px] sm:text-[10px] tracking-[0.2em] text-plimsoll/60">
-                      ESTIMATED EXIT CAPACITY
-                    </span>
-                  </div>
-                  <div className="mt-4 space-y-1.5 font-code text-[10px] tracking-[0.15em]">
-                    <div className="flex justify-between gap-4">
-                      <span className="text-white/45">COST CAPACITY</span>
-                      <span className="text-white/75 tabular-nums">$3,742</span>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <span className="text-white/45">TIME CAPACITY</span>
-                      <span className="text-white/75 tabular-nums">$3,303</span>
-                    </div>
-                    <div className="flex justify-between gap-4 pt-2 border-t border-plimsoll/15">
-                      <span className="text-plimsoll/70">BINDING</span>
-                      <span className="bg-plimsoll text-plimsoll-black px-1.5 py-0.5">TIME</span>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <span className="text-plimsoll/70">RESULT</span>
-                      <span className="border border-plimsoll/50 text-plimsoll px-1.5 py-0.5">SIZE DOWN</span>
-                    </div>
-                  </div>
-                  <p className="mt-4 font-grotesk text-[12px] sm:text-[13px] leading-relaxed text-white/65">
-                    Time capacity binds: at 10% of the 24h quote volume inside one day, the market
-                    can only absorb $3,303 under the stated constraints. Cost capacity is looser —
-                    impact is not the wall today.
-                  </p>
-                </div>
-              </motion.div>
+              <DocsLiveWalkthrough />
 
               <SubLabel className="mt-8">THE DECISION STAYS YOURS</SubLabel>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -637,8 +620,8 @@ binding        = the constraint that produced the minimum`}
               </div>
               <p className="mt-4 font-grotesk text-[13px] leading-relaxed text-white/70">
                 Accept the smaller size, reduce the request, stage the exit across the horizon, wait
-                for liquidity, or refuse. PLIMSOLL recommends SIZE_DOWN; the choice belongs to the
-                operator.
+                for liquidity, or refuse. PLIMSOLL recommends from the live solve; the choice belongs
+                to the operator.
               </p>
             </section>
 
@@ -699,6 +682,79 @@ function CodeBlock({ title, children }: { title: string; children: string }) {
       <pre className="p-4 overflow-x-auto scroll-thin font-code text-[10px] sm:text-[11px] leading-relaxed text-plimsoll/90">
         <code>{children.trim()}</code>
       </pre>
+    </div>
+  );
+}
+
+function DocsLiveWalkthrough() {
+  const [mapped, setMapped] = useState<CapacityResult | null>(null);
+  const [cls, setCls] = useState("UNKNOWN");
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    const c = { ...DEFAULT_CONSTRAINTS, targetNotional: 10000 };
+    postIntent(intentText(c), c)
+      .then((r) => {
+        if (!alive) return;
+        setCls(r.mapped.classification);
+        setMapped(r.mapped);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setCls("UNKNOWN");
+        setError("DATA UNAVAILABLE");
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return (
+    <div className="corner-frame-4 text-plimsoll mt-6 max-w-xl border border-plimsoll/40 bg-plimsoll-black">
+      <Corners tone="gold" />
+      <div className="p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-2 font-code text-[9px] sm:text-[10px] tracking-[0.2em]">
+          <span>REQUESTED — $10,000 · ARKUSDT</span>
+          <span className="border border-plimsoll/30 text-plimsoll/70 px-1.5 py-0.5">{cls}</span>
+        </div>
+        <div className="mt-3 flex items-baseline gap-3 flex-wrap">
+          <span className="font-display text-3xl sm:text-4xl text-plimsoll tabular-nums">
+            {mapped?.exitCapacity != null ? fmtUsdFull(mapped.exitCapacity) : error || "AWAITING LIVE"}
+          </span>
+          <span className="font-code text-[9px] sm:text-[10px] tracking-[0.2em] text-plimsoll/60">
+            ESTIMATED EXIT CAPACITY
+          </span>
+        </div>
+        {mapped?.exitCapacity != null && (
+          <div className="mt-4 space-y-1.5 font-code text-[10px] tracking-[0.15em]">
+            <div className="flex justify-between gap-4">
+              <span className="text-white/45">COST CAPACITY</span>
+              <span className="text-white/75 tabular-nums">{fmtUsdFull(mapped.costCapacity || 0)}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-white/45">TIME CAPACITY</span>
+              <span className="text-white/75 tabular-nums">{fmtUsdFull(mapped.timeCapacity || 0)}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-white/45">BOOK CAPACITY</span>
+              <span className="text-white/75 tabular-nums">{fmtUsdFull(mapped.bookCapacity || 0)}</span>
+            </div>
+            <div className="flex justify-between gap-4 pt-2 border-t border-plimsoll/15">
+              <span className="text-plimsoll/70">BINDING</span>
+              <span className="bg-plimsoll text-plimsoll-black px-1.5 py-0.5">{mapped.binding}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-plimsoll/70">DECISION</span>
+              <span className="border border-plimsoll/50 text-plimsoll px-1.5 py-0.5">
+                {String(mapped.recommendation || "").replace(/_/g, " ")}
+              </span>
+            </div>
+          </div>
+        )}
+        <p className="mt-4 font-grotesk text-[12px] sm:text-[13px] leading-relaxed text-white/65">
+          Source {mapped?.source || "Oregon"} · captured {mapped?.capturedAt || "—"}. Open the desk
+          for $1,000 versus $10,000 on the same constraints.
+        </p>
+      </div>
     </div>
   );
 }

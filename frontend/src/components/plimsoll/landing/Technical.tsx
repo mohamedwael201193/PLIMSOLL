@@ -27,8 +27,8 @@ const STATS = [
     line: "Every payload carries LIVE, REPLAY, PAPER or SIMULATED. Nothing pretends to be what it is not.",
   },
   {
-    title: "FAIL-CLOSED MCP",
-    line: "If the exchange is unreachable, the agent stops. It does not guess, and it does not act on stale data.",
+    title: "POSITION VERSUS POLICY",
+    line: "Governance agents decide whether an action is allowed. Execution agents carry out an approved order. PLIMSOLL continuously asks whether the position itself still fits the market under the user's terms.",
   },
 ];
 

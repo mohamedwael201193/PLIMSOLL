@@ -133,8 +133,7 @@ function readSafeModeFlag(): boolean {
 }
 
 export default function SettingsPage({ glitch }: Props) {
-  // SSR-safe lazy hydration: these views mount client-side after the warning gate,
-  // so the initializers read localStorage exactly once at first client render.
+  // Client-only localStorage reads at first mount.
   const [constitution, setConstitution] = useState<Constitution>(readConstitution);
   const [safeMode, setSafeMode] = useState<boolean>(readSafeModeFlag);
   const [armed, setArmed] = useState(false);

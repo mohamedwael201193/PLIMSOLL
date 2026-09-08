@@ -16,7 +16,7 @@ const INTEGRATIONS = [
   {
     icon: Plug,
     label: "MCP",
-    line: "Model Context Protocol server — the agent's hands for quotes, orders and balances.",
+    line: "Official Agent OS MCP for account, balances, approved orders, and order read-back. Public capacity uses Spot REST.",
   },
   {
     icon: UserCheck,
@@ -81,9 +81,9 @@ export default function AgentOs({ glitch }: Props) {
           BUILT WITH <span className="text-outline-gold">BINANCE AGENT OS</span>
         </h2>
         <motion.p {...reveal(0.1)} className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-white/60 max-w-xl">
-          PLIMSOLL does not talk to the exchange directly. Every read and every write passes
-          through the Binance Agent OS MCP server, on an agentic sub-account, behind your
-          approval. One pipe, bounded permissions, observable steps.
+          Public estimated exit capacity uses official Binance Spot market data. Account access,
+          approved execution, and order read-back use Binance Agent OS MCP on the Agentic
+          account — behind your approval. Not a Binance product. Not a Binance endorsement.
         </motion.p>
 
         <div className="mt-12 grid lg:grid-cols-2 gap-8 items-start">

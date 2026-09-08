@@ -83,8 +83,9 @@ const TROUBLESHOOTING = [
     response: "Halt. The write path is never guessed by name.",
   },
   {
-    symptom: "SCHEMA CHANGE",
-    response: "Halt and re-discover before any further calls.",
+    symptom: "BINANCE 3346001 ON WEB AUTHORIZE",
+    response:
+      "This CIMD web client is not on Binance's Agent OS allowlist. Use a supported Agent client. Do not impersonate Codex, Claude, Cursor, VS Code, or ChatGPT.",
   },
 ];
 
@@ -180,9 +181,10 @@ export default function McpPage({ glitch }: Props) {
             <span>{caps ? (caps.bound ? `BOUND · ${caps.tool_count ?? 0} TOOLS · ${caps.classification}` : "NOT BOUND") : "DISCOVERING…"}</span>
           </div>
           <p className="mt-3 font-grotesk text-[13px] text-white/65 leading-relaxed">
-            PLIMSOLL handles intent, constraints, capacity, policy, approval and re-solve. Binance Agent OS handles
-            account access, market/account capabilities, approved execution and read-back. Official MCP: {MCP_ENDPOINT}.
-            Web authorize is refused as unsupported agent 3346001 — use a supported Agent client.
+            PLIMSOLL adds intent, constitution, estimated exit capacity from official public Spot
+            data, deterministic decision, approval, and continuous re-solve. Binance Agent OS MCP
+            provides account access, approved execution, and order read-back. Official MCP: {MCP_ENDPOINT}.
+            This CIMD web client is refused as unsupported agent 3346001 — use a supported Agent client.
           </p>
           {caps?.reason && (
             <p className="mt-3 font-code text-[10px] tracking-[0.12em] text-rose-300">{caps.reason}</p>
@@ -241,7 +243,7 @@ export default function McpPage({ glitch }: Props) {
             <code>{CLIENT_CONFIG}</code>
           </pre>
           <p className="mt-3 font-code text-[8px] sm:text-[9px] tracking-[0.2em] text-white/35">
-            PLACEHOLDER KEYS ARE CONFIGURABLE — ONLY THE OFFICIAL URL IS FIXED.
+            ADD THIS URL IN A SUPPORTED AGENT CLIENT. NO API KEYS IN THE BROWSER.
           </p>
         </motion.div>
 

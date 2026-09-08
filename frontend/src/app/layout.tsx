@@ -22,7 +22,7 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "PLIMSOLL — The Market Has a Load Line",
   description:
-    "PLIMSOLL estimates exit capacity under your stated constraints — then keeps re-solving as the market changes. Built with Binance Agent OS. Your portfolio value is not your exit value.",
+    "PLIMSOLL estimates exit capacity under your stated constraints — then keeps re-solving as the market changes. Built with Binance Agent OS. Your portfolio value is not your exit capacity.",
   keywords: [
     "Plimsoll",
     "exit capacity",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "PLIMSOLL — The Market Has a Load Line",
     description:
-      "Estimated exit capacity under your stated constraints. Your portfolio value is not your exit value.",
+      "Estimated exit capacity under your stated constraints. Your portfolio value is not your exit capacity.",
     siteName: "Plimsoll",
     type: "website",
   },

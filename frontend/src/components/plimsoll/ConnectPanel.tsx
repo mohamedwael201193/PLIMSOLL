@@ -58,13 +58,7 @@ export function ConnectPanel({
         </p>
       )}
 
-      {account.reason && account.connected === false && (
-        <p className="mt-3 font-code text-[10px] tracking-[0.12em] text-rose-300/90 leading-relaxed">
-          Binance did not authorize this web client. Technical reason: unsupported AI agent (3346001).
-          Next: authorize through a supported Agent. Oregon never receives a browser token.
-        </p>
-      )}
-      {account.error && !account.reason && (
+      {account.error && (
         <p className="mt-3 font-code text-[10px] tracking-[0.12em] text-rose-300/90">{account.error}</p>
       )}
 

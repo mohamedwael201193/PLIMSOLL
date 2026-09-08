@@ -74,7 +74,7 @@ export default function MarketStrip() {
           <div className="flex items-center gap-2 pr-4 py-2 shrink-0 text-plimsoll">
             {live ? <Radio className="w-3.5 h-3.5 pulse-gold rounded-full" aria-hidden /> : <Activity className="w-3.5 h-3.5" aria-hidden />}
             <span className={live ? "text-plimsoll" : "text-plimsoll/70"}>
-              {data ? (live ? "LIVE" : "UNKNOWN") : "CONNECTING"}
+              {data ? (live ? "LIVE" : "UNKNOWN") : "LOADING FEED"}
             </span>
           </div>
 

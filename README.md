@@ -127,7 +127,7 @@ Frontend (Vercel): https://plimsoll-jade.vercel.app
 
 - `/` landing
 - `#/app` operating desk (intent, capacity, charts, approval, typed CONFIRM)
-- `#/portfolio` Agentic account positions (CONNECT BINANCE when disconnected)
+- `#/portfolio` Agentic account positions (PUBLIC MODE until a supported Agent binds)
 - `#/docs` product documentation
 - `#/docs/mcp` official Agent OS MCP
 

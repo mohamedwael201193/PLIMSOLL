@@ -46,7 +46,7 @@ export default function HiddenProblem({ glitch }: Props) {
   return (
     <section
       className={`relative grid-dark noise overflow-hidden py-20 sm:py-28 ${glitch ? "glitch-on" : ""}`}
-      aria-label="The hidden problem — portfolio value is not exit value"
+      aria-label="The hidden problem — portfolio value is not exit capacity"
     >
       <div className="relative z-10 mx-auto max-w-[1600px] px-4 sm:px-8">
         <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-12 lg:gap-8 items-end">
@@ -62,7 +62,7 @@ export default function HiddenProblem({ glitch }: Props) {
                 VALUE IS NOT
               </motion.span>
               <motion.span {...reveal(0.2)} className="block text-white">
-                YOUR EXIT VALUE.
+                YOUR EXIT CAPACITY.
               </motion.span>
             </h2>
 

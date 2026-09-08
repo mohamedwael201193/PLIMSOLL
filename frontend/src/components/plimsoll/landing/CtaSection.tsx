@@ -60,11 +60,11 @@ export default function CtaSection({ glitch }: Props) {
             <span>CHECK YOUR CAPACITY</span>
           </a>
           <a
-            href="#/docs"
+            href="#/app"
             className={`tech-box inline-flex items-center gap-3 font-code text-xs sm:text-sm tracking-[0.15em] text-plimsoll-black ${focusBlack}`}
-            aria-label="Read the documentation"
+            aria-label="Open the desk"
           >
-            <span>READ THE DOCS</span>
+            <span>OPEN THE DESK</span>
           </a>
         </motion.div>
 

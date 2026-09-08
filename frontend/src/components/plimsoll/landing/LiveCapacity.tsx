@@ -18,6 +18,7 @@ const SEGMENTS = 24;
 interface StepperSpec {
   key: Exclude<keyof CapacityConstraints, "symbol">;
   label: string;
+  hint: string;
   min: number;
   max: number;
   step: number;
@@ -28,6 +29,7 @@ const STEPPERS: StepperSpec[] = [
   {
     key: "targetNotional",
     label: "TARGET_NOTIONAL",
+    hint: "The exposure you want to hold or add, in quote notional.",
     min: 500,
     max: 100_000,
     step: 500,
@@ -36,6 +38,7 @@ const STEPPERS: StepperSpec[] = [
   {
     key: "maxExitCostBps",
     label: "MAX_EXIT_COST",
+    hint: "Maximum all-in cost you are willing to tolerate when exiting.",
     min: 10,
     max: 200,
     step: 5,
@@ -44,6 +47,7 @@ const STEPPERS: StepperSpec[] = [
   {
     key: "exitHorizonDays",
     label: "EXIT_HORIZON",
+    hint: "How many days you allow for that exit.",
     min: 0.25,
     max: 7,
     step: 0.25,
@@ -52,6 +56,7 @@ const STEPPERS: StepperSpec[] = [
   {
     key: "participationPct",
     label: "PARTICIPATION",
+    hint: "How much of recent market volume you are willing to represent.",
     min: 1,
     max: 30,
     step: 1,
@@ -60,6 +65,7 @@ const STEPPERS: StepperSpec[] = [
   {
     key: "bookFractionPct",
     label: "BOOK_FRACTION",
+    hint: "How much of currently visible bids you are willing to rely on.",
     min: 1,
     max: 100,
     step: 1,
@@ -73,8 +79,7 @@ export default function LiveCapacity({ glitch }: Props) {
   const [result, setResult] = useState<CapacityResult | null>(null);
   const [solvedFor, setSolvedFor] = useState<CapacityConstraints | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [hash, setHash] = useState("0x000000");
+  const [hash, setHash] = useState("AWAITING SNAPSHOT");
   const busyRef = useRef(false);
 
   const stale =
@@ -85,33 +90,19 @@ export default function LiveCapacity({ glitch }: Props) {
     busyRef.current = true;
     setPhase("generating");
     setError(null);
-    setProgress(2);
     setHash("—");
 
-    const progressTimer = setInterval(() => {
-      setProgress((p) => Math.min(93, p + 3 + Math.random() * 6));
-    }, 90);
-
-    const request = postIntent(intentText(constraints), constraints).then((r) => r.mapped);
-
-    // hold the terminal on screen for at least 1.8s
-    const floor = new Promise<void>((resolve) => setTimeout(resolve, 1800));
-
     try {
-      const [outcome] = await Promise.allSettled([request, floor]);
-      if (outcome.status === "fulfilled") {
-        setProgress(100);
-        setResult(outcome.value);
-        setSolvedFor(constraints);
-        setHash(outcome.value.snapshot.hash);
-        setPhase("result");
-      } else {
-        const reason = outcome.reason instanceof Error ? outcome.reason.message : "resolution failed";
-        setError(reason.toUpperCase().replace(/\s+/g, "_"));
-        setPhase("idle");
-      }
+      const outcome = await postIntent(intentText(constraints), constraints).then((r) => r.mapped);
+      setResult(outcome);
+      setSolvedFor(constraints);
+      setHash(outcome.snapshot.hash);
+      setPhase("result");
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : "resolution failed";
+      setError(reason.toUpperCase().replace(/\s+/g, "_"));
+      setPhase("idle");
     } finally {
-      clearInterval(progressTimer);
       busyRef.current = false;
     }
   }, [constraints]);
@@ -138,9 +129,9 @@ export default function LiveCapacity({ glitch }: Props) {
         </h2>
         <motion.p
           {...reveal(0.1)}
-          className="mt-5 font-code text-[10px] sm:text-xs tracking-[0.2em] text-plimsoll-black/70"
+          className="mt-5 font-grotesk text-[13px] sm:text-[15px] leading-relaxed text-plimsoll-black/80 max-w-xl"
         >
-          DECLARE YOUR CONSTRAINTS. THE BOOK DECIDES THE REST.
+          PLIMSOLL estimates how much exposure the market can support under your stated exit constraints — and keeps re-solving as conditions change.
         </motion.p>
 
         <div className="mt-10 sm:mt-14 grid lg:grid-cols-2 gap-6 items-stretch">
@@ -269,45 +260,23 @@ export default function LiveCapacity({ glitch }: Props) {
                   aria-live="polite"
                 >
                   <div className="flex items-center justify-between text-[9px] sm:text-[10px] tracking-[0.25em] text-plimsoll/70">
-                    <span>RESOLVING · {constraints.symbol}</span>
+                    <span>ASKING OREGON · {constraints.symbol}</span>
                     <span className="blink" aria-hidden>
                       ◆
                     </span>
                   </div>
 
-                  <div className="mt-6 flex items-baseline gap-3">
-                    <span className="text-[10px] tracking-[0.25em] text-white/50">COMPLETION</span>
-                    <span className="font-display text-4xl sm:text-5xl text-plimsoll tabular-nums">
-                      {Math.round(progress)}%
-                    </span>
-                  </div>
-
-                  <div className="mt-3 h-3 border border-plimsoll/30 relative overflow-hidden">
-                    <motion.div
-                      className="absolute inset-y-0 left-0 bg-plimsoll"
-                      animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.2 }}
-                    />
-                  </div>
+                  <p className="mt-10 font-grotesk text-[14px] leading-relaxed text-white/70 max-w-sm">
+                    Waiting for a live backend snapshot. Numbers are not shown until Oregon returns them.
+                  </p>
 
                   <div className="mt-6 space-y-2 text-[10px] sm:text-[11px] tracking-[0.12em]">
                     <div className="text-white/60">
-                      <span className="text-plimsoll/70">&gt;</span> INIT CONSTRAINT SET ............ OK
-                    </div>
-                    <div className="text-white/60">
-                      <span className="text-plimsoll/70">&gt;</span> WALKING VISIBLE BID BOOK · 1000 LEVELS
-                    </div>
-                    <div className="text-white/60">
-                      <span className="text-plimsoll/70">&gt;</span> SNAPSHOT HASH{" "}
-                      <span className="text-plimsoll tabular-nums">{hash}</span>
+                      <span className="text-plimsoll/70">&gt;</span> POST /v1/intent
                     </div>
                     <div className="text-white/40">
-                      <span className="text-plimsoll/70">&gt;</span> STALE FEEDS REFUSE ACTION
+                      <span className="text-plimsoll/70">&gt;</span> NO FAKE PROGRESS · NO SUBSTITUTE VALUES
                     </div>
-                  </div>
-
-                  <div className="mt-auto pt-6 text-[9px] tracking-[0.25em] text-plimsoll/50 blink">
-                    DO NOT REFRESH — THE BOOK IS MOVING
                   </div>
                 </motion.div>
               )}
@@ -405,6 +374,8 @@ export default function LiveCapacity({ glitch }: Props) {
 
                     {/* snapshot footer */}
                     <div className="mt-4 pt-3 border-t border-plimsoll-black/25 font-code text-[8px] sm:text-[9px] tracking-[0.15em] text-plimsoll-black/55 flex flex-wrap gap-x-4 gap-y-1">
+                      <span>SOURCE {result.source || "OREGON"}</span>
+                      <span>CAPTURED {result.capturedAt || "—"}</span>
                       <span>SNAPSHOT {result.snapshot.hash}</span>
                       <span>MID {result.snapshot.mid.toFixed(4)}</span>
                       <span>SPREAD {result.snapshot.spreadBps.toFixed(1)} BPS</span>
@@ -445,6 +416,7 @@ function StepperRow({
         </label>
         <span className="font-code text-[11px] text-plimsoll tabular-nums">{spec.fmt(value)}</span>
       </div>
+      <p className="mb-2 font-grotesk text-[11px] leading-snug text-white/45">{spec.hint}</p>
       <div className="flex items-center gap-2">
         <button
           type="button"

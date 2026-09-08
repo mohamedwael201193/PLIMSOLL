@@ -74,7 +74,7 @@ export default function Header({ glitch, route, live, connected }: Props) {
                 : "text-plimsoll/60 hover:text-plimsoll border-plimsoll/30"
             }`}
           >
-            {connected ? "CONNECTED" : "CONNECT"}
+            {connected ? "AGENT CONNECTED" : "PUBLIC MODE"}
           </a>
           <a
             href="#/settings"
