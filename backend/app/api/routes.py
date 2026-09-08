@@ -20,6 +20,8 @@ from app.logutil import get_logger
 from app.rails.market import MarketError, fetch_snapshot, fetch_tickers
 from app.rails.mcp import McpError, McpSession
 from app.rails.oauth import (
+    NOT_CONNECTED_REASON,
+    OAUTH_STATUS_NOTE,
     client_metadata,
     current_mcp_token,
     handle_callback,
@@ -597,7 +599,7 @@ def account() -> dict[str, Any]:
             "connected": False,
             "classification": "UNKNOWN",
             "account_kind": "NOT_CONNECTED",
-            "reason": "No Agent OS session on Oregon. Use CONNECT BINANCE to run official Agent OS OAuth. The browser never receives the token.",
+            "reason": NOT_CONNECTED_REASON,
             "writes_enabled": settings.writes_enabled,
             "kill_switch": settings.kill_switch,
         }
@@ -668,7 +670,7 @@ def mcp_caps() -> dict[str, Any]:
         return {
             "classification": "UNKNOWN",
             "bound": False,
-            "reason": "No Agent OS session. CONNECT BINANCE starts official OAuth; tools are discovered after bind.",
+            "reason": NOT_CONNECTED_REASON,
         }
     session = McpSession(settings.binance_mcp_url, token)
     with httpx.Client(timeout=settings.http_timeout_s) as client:
@@ -698,7 +700,7 @@ def oauth_status(request: Request) -> dict[str, Any]:
         "mcp": "https://agent.binance.com/mcp/agentic",
         "token_endpoint_auth_method": "none",
         "pkce": "S256",
-        "note": "CONNECT BINANCE starts official Agent OS OAuth. Tokens never leave Oregon.",
+        "note": OAUTH_STATUS_NOTE,
     }
 
 

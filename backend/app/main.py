@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 
+from app.api.mcp_server import router as mcp_router
 from app.api.routes import router
 from app.config import get_settings
 from app.logutil import configure_logging, get_logger
@@ -58,6 +59,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(router)
+app.include_router(mcp_router)
 
 
 @app.middleware("http")

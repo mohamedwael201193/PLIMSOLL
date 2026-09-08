@@ -497,7 +497,7 @@ function ExecutionStatusCard() {
         setRows([
           { label: "WRITES", value: health.writes_enabled ? "ON" : "OFF", tone: "gold" },
           { label: "KILL_SWITCH", value: health.kill_switch ? "HALTED" : "MONITORED", tone: "dim" },
-          { label: "MCP", value: "OREGON BOUND", tone: "dim" },
+          { label: "MCP", value: health.mcp_bound ? "BOUND" : "NOT BOUND", tone: "dim" },
           {
             label: "LAST READ-BACK",
             value: last ? `${last.status} ${last.order_id || last.client_order_id}` : "—",

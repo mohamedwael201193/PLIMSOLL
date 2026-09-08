@@ -27,6 +27,9 @@ const CLIENT_CONFIG = `{
   "mcpServers": {
     "binance-agent-os": {
       "url": "https://agent.binance.com/mcp/agentic"
+    },
+    "plimsoll": {
+      "url": "https://plimsoll-oregon.onrender.com/mcp"
     }
   }
 }`;
@@ -182,7 +185,9 @@ export default function McpPage({ glitch }: Props) {
           </div>
           <p className="mt-3 font-grotesk text-[13px] text-white/65 leading-relaxed">
             PLIMSOLL handles intent, constraints, capacity, policy, approval and re-solve. Binance Agent OS handles
-            account access, market/account capabilities, approved execution and read-back. Official MCP: {MCP_ENDPOINT}
+            account access, market/account capabilities, approved execution and read-back. Official MCP: {MCP_ENDPOINT}.
+            Oregon also serves capacity MCP at https://plimsoll-oregon.onrender.com/mcp (no execute tool). Web CONNECT is
+            refused by Binance as unsupported agent 3346001 until they allowlist this CIMD client.
           </p>
           {caps?.reason && (
             <p className="mt-3 font-code text-[10px] tracking-[0.12em] text-rose-300">{caps.reason}</p>

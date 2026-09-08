@@ -28,6 +28,16 @@ AS_METADATA_URL = "https://agent.binance.com/.well-known/oauth-authorization-ser
 MCP_RESOURCE = "https://agent.binance.com/mcp/agentic"
 OAUTH_SCOPE = "mcp:account:read mcp:spot:trade mcp:master:read"
 PENDING_TTL_S = 600
+NOT_CONNECTED_REASON = (
+    "No Agent OS session on Oregon. CONNECT BINANCE opens official Agent OS OAuth. "
+    "Binance currently refuses this CIMD web client as an unsupported AI agent (3346001). "
+    "Oregon stays unbound. The browser never receives the token."
+)
+OAUTH_STATUS_NOTE = (
+    "CONNECT BINANCE starts official Agent OS OAuth (CIMD + PKCE). "
+    "Binance currently refuses this web client as an unsupported AI agent (3346001). "
+    "Tokens never leave Oregon."
+)
 
 _lock = threading.Lock()
 _access_token = ""

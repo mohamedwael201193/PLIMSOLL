@@ -120,7 +120,14 @@ export async function getHealth() {
   const res = await fetch(`${API_BASE}/health`, { cache: "no-store" });
   const body = await parse(res);
   if (!res.ok) throw new Error("health failed");
-  return body as { ok: boolean; writes_enabled: boolean; kill_switch: boolean; app: string };
+  return body as {
+    ok: boolean;
+    writes_enabled: boolean;
+    kill_switch: boolean;
+    app: string;
+    mcp_bound?: boolean;
+    mcp_token_source?: string;
+  };
 }
 
 export async function getReady() {

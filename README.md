@@ -40,7 +40,11 @@ Every payload is labelled `LIVE`, `REPLAY`, `PAPER`, `TESTNET`, or `SIMULATED`. 
 
 Writes default to **off** (`WRITES_ENABLED=false`). `POST /v1/execute` is not authorization.
 
-A live Spot order requires:
+Official Binance Agent OS OAuth (CIMD + PKCE) is implemented on Oregon. **CONNECT BINANCE** opens `accounts.binance.com` Agentic Account Access. Chrome-verified on 2026-09-08: Binance then refuses this web client as an unsupported AI agent (`3346001`). Supported launch clients are Claude, Claude Code, Codex, ChatGPT, Cursor, and VS Code — not a custom CIMD web app. Oregon stays unbound. We do not impersonate those clients.
+
+Supported-agent path: add official MCP `https://agent.binance.com/mcp/agentic` in Cursor/Claude/Codex, complete Binance OAuth there, and add PLIMSOLL capacity MCP `https://plimsoll-oregon.onrender.com/mcp` (health, capacity, intent, honest account status — **no execute tool**).
+
+A live Spot order from the desk still requires:
 
 1. Application `writes_enabled=true`
 2. Fresh snapshot hash matching the approval

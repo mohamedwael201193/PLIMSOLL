@@ -92,6 +92,7 @@ def test_account_not_connected():
     assert body["connected"] is False
     assert body["classification"] == "UNKNOWN"
     assert body["account_kind"] == "NOT_CONNECTED"
+    assert "3346001" in body["reason"]
 
 
 def test_tickers_live_or_classified_failure():
