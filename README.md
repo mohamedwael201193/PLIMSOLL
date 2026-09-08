@@ -33,7 +33,6 @@ Spine: **invert → legalize → approval → act → verify → re-invert**.
 - Market data: official public Spot REST (`/api/v3/depth`, `/api/v3/ticker/24hr`, `/api/v3/exchangeInfo`). If `api.binance.com` returns 418/4xx from a cloud IP, the backend retries the official market-data host `https://data-api.binance.vision` (market data only; not trading).
 - Account / orders: official Agent OS MCP (`https://agent.binance.com/mcp/agentic`) after runtime tool discovery
 - Frontend: React + Vite. Browser talks **only** to this backend. No Binance secrets in the client.
-- Browser talks only to this backend. No Binance secrets in the client.
 
 Every payload is labelled `LIVE`, `REPLAY`, `PAPER`, `TESTNET`, or `SIMULATED`. Replay fixtures are tests, not product data.
 
@@ -105,7 +104,7 @@ cd ..\frontend
 npm test
 ```
 
-Includes REPLAY books, property checks, HTTP 429/418 classes, approval expiry, duplicate `clientOrderId` suppression, isolated-schema Alembic, and one **LIVE** public REST snapshot for `ARKUSDT` (no hardcoded prices).
+Includes REPLAY books, property checks, HTTP 429/418 classes, MCP timeout / missing tool / schema-change fail-closed, kill-switch halt, approval expiry, duplicate `clientOrderId` suppression, isolated-schema Alembic, and one **LIVE** public REST snapshot for `ARKUSDT` (no hardcoded prices).
 
 ## Deployment
 
@@ -148,8 +147,12 @@ CI: GitHub Actions runs backend `pytest` and frontend `npm test` + `npm run buil
 
 ## Demo
 
-1. `POST /v1/intent` with a dollar size and symbol (LIVE book).
-2. Read `estimated_exit_capacity_notional`, `cost_capacity_notional`, `time_capacity_notional`, `binding`.
-3. If the agent proposes a legal size, `POST /v1/approvals`.
+Live UI: https://plimsoll-jade.vercel.app (`/`, `/desk`, `/docs`) against Oregon `https://plimsoll-oregon.onrender.com`.
+
+1. Open the landing. The ARKUSDT strip is a **LIVE** Oregon snapshot, not a mock.
+2. On `/desk`, ask for a dollar size (try `$10000` of ARK with a one-day exit). Read `estimated_exit_capacity_notional`, cost vs time, and `binding`.
+3. If the agent proposes a legal size, issue a snapshot-bound approval. That token is **not** a financial write.
 4. A live order happens only after operator `CONFIRM` plus `WRITES_ENABLED=true`.
 5. `POST /v1/resolve` re-inverts a held position. Over-capacity → `TRIM_HELD`, never an automatic sell.
+
+The desk does not invent fills. Empty execution history means none stored.

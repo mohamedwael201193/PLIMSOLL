@@ -66,8 +66,10 @@ class McpSession:
     def _post(self, client: httpx.Client, payload: dict[str, Any]) -> Any:
         try:
             resp = client.post(self.url, headers=self._headers(), json=payload)
+        except httpx.TimeoutException as exc:
+            raise McpError("TIMEOUT", str(exc)[:240]) from exc
         except httpx.HTTPError as exc:
-            raise McpError("CONNECTION_FAILURE", str(exc)) from exc
+            raise McpError("CONNECTION_FAILURE", str(exc)[:240]) from exc
         if resp.status_code >= 400:
             raise McpError("HTTP_ERROR", f"HTTP {resp.status_code}")
         sid = resp.headers.get("mcp-session-id")

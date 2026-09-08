@@ -89,3 +89,25 @@ def test_fills_without_db_is_empty():
     r = client.get("/v1/fills")
     assert r.status_code == 200
     assert r.json()["fills"] == []
+
+
+def test_execute_kill_switch_halted():
+    from app.config import get_settings
+
+    settings = get_settings()
+    settings.kill_switch = True
+    try:
+        r = client.post(
+            "/v1/execute",
+            json={
+                "confirm": "CONFIRM",
+                "confirmation_token": "nope",
+                "snapshot_hash": "abc",
+                "symbol": "ARKUSDT",
+                "quote_order_qty": "5",
+            },
+        )
+        assert r.status_code == 403
+        assert r.json()["detail"]["error_class"] == "HALTED"
+    finally:
+        settings.kill_switch = False
