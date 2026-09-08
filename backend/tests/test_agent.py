@@ -47,8 +47,22 @@ def test_intent_do_not_increase_if_falling():
         snapshot=snap,
         constitution=CONST,
         previous_capacity=Decimal("100000"),
+        position=Position(symbol="ARKUSDT", base_qty=Decimal("50"), avg_price=Decimal("1")),
     )
     assert d.action.value == "REFUSE"
+
+
+def test_greenfield_ask_sizes_on_falling_book_instead_of_refuse():
+    """Public ASK with no held position must still FILL or SIZE_DOWN on a live book."""
+    snap = snapshot(quote_volume="1000")
+    d = run_once(
+        text="I want $1000 of ARK and need to exit within one day.",
+        snapshot=snap,
+        constitution=CONST,
+        previous_capacity=Decimal("100000"),
+    )
+    assert d.action.value in {"FILL_AS_ASKED", "SIZE_DOWN"}
+    assert "falling" not in d.reason.lower()
 
 
 def test_sub_five_percent_capacity_tick_does_not_refuse_add():

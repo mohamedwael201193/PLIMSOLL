@@ -105,7 +105,7 @@ def decide(
             ),
         )
 
-    if falling and requested and requested > 0:
+    if falling and requested and requested > 0 and held_notional is not None:
         return Decision(
             action=Action.REFUSE,
             state=AgentState.WATCH,
