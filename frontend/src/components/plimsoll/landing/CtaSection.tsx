@@ -33,7 +33,7 @@ export default function CtaSection({ glitch }: Props) {
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1600px] px-4 sm:px-8">
-        <SectionLabel index="10" name="DEPLOY" tone="gold" />
+        <SectionLabel index="11" name="DEPLOY" tone="gold" />
 
         <h2 className="font-display section-word mt-6 leading-[1.02] text-plimsoll-black">
           <motion.span {...reveal()} className="block">

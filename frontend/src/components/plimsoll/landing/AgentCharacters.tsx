@@ -43,7 +43,7 @@ export default function AgentCharacters({ glitch }: Props) {
       aria-label="The crew — agent entities"
     >
       <div className="relative z-10 mx-auto max-w-[1600px] px-4 sm:px-8">
-        <SectionLabel index="11" name="THE CREW" />
+        <SectionLabel index="10" name="THE CREW" />
         <h2 className="font-display section-word mt-4 text-white">
           THE <span className="text-outline-gold">CREW</span>
         </h2>
