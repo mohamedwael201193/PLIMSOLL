@@ -68,7 +68,7 @@ export default function Header({ glitch, route, live, connected }: Props) {
           </span>
           <a
             href="#/settings"
-            className={`hidden sm:inline px-2 py-0.5 border transition-colors ${
+            className={`px-2 py-0.5 border transition-colors ${
               connected
                 ? "border-plimsoll text-plimsoll bg-plimsoll/10"
                 : "text-plimsoll/60 hover:text-plimsoll border-plimsoll/30"
