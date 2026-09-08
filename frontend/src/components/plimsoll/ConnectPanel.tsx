@@ -48,7 +48,7 @@ export function ConnectPanel({
       <p className="mt-2 font-grotesk text-[13px] leading-relaxed text-white/65">
         {account.connected
           ? kindLabel
-          : "Public market data is live. Private balances and execution stay off until official Agent OS OAuth binds the Agentic Sub on the Oregon server."}
+          : "Public market data is live. CONNECT opens official Agent OS OAuth. Binance currently refuses this CIMD web client as an unsupported AI agent (3346001). Oregon stays unbound until Binance allowlists PLIMSOLL. We do not impersonate another agent."}
       </p>
 
       {account.reason && (
@@ -129,7 +129,7 @@ export function ConnectPanel({
       <div className="mt-4 border border-plimsoll/40 bg-plimsoll/10 p-3 flex items-start gap-2.5">
         <Lock className="w-4 h-4 text-plimsoll shrink-0 mt-0.5" strokeWidth={2} aria-hidden />
         <p className="font-grotesk text-[11px] leading-snug text-white/60">
-          Do not paste API secrets here. CONNECT BINANCE opens official Agent OS OAuth. The token stays on Oregon. Official MCP: {MCP_ENDPOINT}.
+          Do not paste API secrets here. CONNECT BINANCE opens official Agent OS OAuth. The token would stay on Oregon. Live authorize currently stops at Binance unsupported-agent 3346001. Official MCP: {MCP_ENDPOINT}.
         </p>
       </div>
     </section>

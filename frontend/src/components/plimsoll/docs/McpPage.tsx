@@ -44,7 +44,7 @@ const SECURITY_ROWS = [
   {
     icon: KeyRound,
     label: "OAUTH AT MCP BIND",
-    line: "Authentication happens at bind time through the official OAuth flow. No static API key sits in a config file.",
+    line: "CONNECT starts official Agent OS OAuth (CIMD + PKCE). Binance currently allowlists specific AI agents; this web client is refused (3346001) until they list PLIMSOLL. No static API key sits in the browser.",
   },
   {
     icon: UserCog,

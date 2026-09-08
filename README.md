@@ -144,6 +144,7 @@ CI: GitHub Actions runs backend `pytest` and frontend `npm test` + `npm run buil
 
 - Capacity uses **visible** book and 24h volume. Icebergs and spoofing are not modelled.
 - MCP `getAccount` does not label Agentic vs master. The operator must use the Agentic virtual sub-account created at MCP OAuth, not a Normal Sub.
+- CONNECT BINANCE reaches official Agentic Account Access. Binance currently refuses this CIMD web client as an unsupported AI agent (`3346001`). Oregon stays unbound. We do not impersonate Codex, Claude, or any other listed agent.
 - Live financial writes are blocked until `CONFIRM`.
 - Free Render instances sleep; the first request after idle can take about a minute.
 - Some cloud egress IPs are banned by Binance (`HTTP 418`). Production market data uses official REST hosts from an Oregon instance.
@@ -156,7 +157,7 @@ Live UI: https://plimsoll-jade.vercel.app (`/`, `#/app`, `#/docs`, `#/docs/mcp`)
 1. Open the landing. The ARKUSDT strip is a **LIVE** Oregon ticker feed, not a mock.
 2. On `#/app`, ask for a dollar size (try `$1000` then `$10000` of ARK with a one-day exit). Read estimated exit capacity, cost vs time, and binding. Numbers come from `POST /v1/intent`.
 3. If the agent proposes a legal size, issue a snapshot-bound approval. That token is **not** a financial write.
-4. Click **CONNECT BINANCE**. Oregon starts official Agent OS OAuth (PKCE). The token stays on the server. Then read the Agentic account. Zero balances display as zero.
+4. Click **CONNECT BINANCE**. Oregon starts official Agent OS OAuth (PKCE, CIMD). Chrome reaches Binance Agentic Account Access. As of 2026-09-08 Binance shows unsupported-agent `3346001` for this client, so the Agentic account does **not** bind. Zero balances display as zero only after a real bind.
 5. A live order happens only after the operator types **`CONFIRM`** plus `WRITES_ENABLED=true`. Oregon `POST /v1/execution/prepare` checks live minNotional against the Agentic USDT balance first.
 6. `POST /v1/resolve` re-inverts a held position. Over-capacity → `TRIM_HELD`, never an automatic sell.
 
