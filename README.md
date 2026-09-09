@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="docs/images/plimsoll-mark.svg" alt="PLIMSOLL" width="56" height="56">
-</p>
-
 # PLIMSOLL
 
 ### The market has a load line. Your portfolio should too.
@@ -27,22 +23,12 @@ PLIMSOLL is a continuous exposure-capacity agent for Binance Spot trading. It es
 </p>
 
 <p align="center">
-  <img src="docs/images/01-landing.jpg" alt="PLIMSOLL landing — estimated exit capacity under stated constraints" width="920">
+  <video src="https://github.com/mohamedwael201193/PLIMSOLL/raw/main/docs/demo/PLIMSOLL-FINAL.mp4" width="100%" controls playsinline>
+    PLIMSOLL demo — product walkthrough and real Binance Agent OS session (2:54, 1920×1080).
+  </video>
 </p>
 
----
-
-## Demo
-
-The attached film is the recorded product + a real authenticated Binance Agent OS session. It is **2:54**, 1920×1080.
-
-<video src="./docs/demo/PLIMSOLL-FINAL.mp4" poster="./docs/images/demo-poster.jpg" controls width="100%"></video>
-
-**[Watch the full demo video](./docs/demo/PLIMSOLL-FINAL.mp4)** · **[Watch on X](https://x.com/Mowael777/status/2097473610445209852)**
-
-GitHub README pages often do not play in-repo MP4 files in the browser. If the player above is blank, use the file link or the X post. The poster is a real frame from the same film.
-
-> Real execution evidence is shown in the attached demo video. The public PLIMSOLL website remains honest about its account connection state.
+> Real execution evidence is in the film above. The public PLIMSOLL website remains honest about its account connection state.
 
 ---
 
